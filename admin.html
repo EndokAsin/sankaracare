@@ -182,89 +182,6 @@
             const { data } = supabase.storage.from(bucketName).getPublicUrl(fileName);
             return { url: data.publicUrl, error: null };
         };
-
-        // --- Generic CRUD Manager ---
-        function createCrudManager({ tableName, formId, listId, idInputId, fileInputId, urlInputId, bucketName, renderList, fillForm, cancelBtnId }) {
-            const form = document.getElementById(formId);
-            const list = document.getElementById(listId);
-            const idInput = document.getElementById(idInputId);
-            const fileInput = fileInputId ? document.getElementById(fileInputId) : null;
-            const urlInput = urlInputId ? document.getElementById(urlInputId) : null;
-            const cancelBtn = cancelBtnId ? document.getElementById(cancelBtnId) : null;
-            let editId = null;
-
-            const reset = () => {
-                form.reset();
-                if (idInput) idInput.value = '';
-                if (urlInput) urlInput.value = '';
-                editId = null;
-                form.querySelector('button[type=submit]').textContent = `Simpan ${tableName.charAt(0).toUpperCase() + tableName.slice(1)}`;
-                cancelBtn?.classList.add('hidden');
-            };
-
-            const fetchData = async () => {
-                const { data, error } = await supabase.from(tableName).select('*').order('created_at', { ascending: false });
-                if (error) console.error(`Error fetching ${tableName}:`, error);
-                else renderList(data, list);
-            };
-
-            const submit = async (e) => {
-                e.preventDefault();
-                const submitButton = form.querySelector('button[type=submit]');
-                submitButton.disabled = true;
-
-                let fileUrl = urlInput ? urlInput.value : null;
-                if (fileInput && fileInput.files[0]) {
-                    const { url, error } = await uploadFile(bucketName, fileInput.files[0]);
-                    if (error) { submitButton.disabled = false; return; }
-                    fileUrl = url;
-                }
-                
-                const dataToSubmit = {};
-                new FormData(form).forEach((value, key) => { if(value) dataToSubmit[key] = value; });
-                
-                // Assign URL based on convention
-                if (urlInputId === 'image-url') dataToSubmit.image_url = fileUrl;
-                if (urlInputId === 'news-image-url') dataToSubmit.image_url = fileUrl;
-                if (urlInputId === 'partner-logo-url') dataToSubmit.logo_url = fileUrl;
-                if (urlInputId === 'org-photo-url') dataToSubmit.photo_url = fileUrl;
-
-                const { error } = editId
-                    ? await supabase.from(tableName).update(dataToSubmit).eq('id', editId)
-                    : await supabase.from(tableName).insert([dataToSubmit]);
-
-                if (error) alert(`Gagal menyimpan: ${error.message}`);
-                else { reset(); await fetchData(); }
-                submitButton.disabled = false;
-            };
-
-            list.addEventListener('click', async (e) => {
-                const editBtn = e.target.closest('.edit-btn');
-                const deleteBtn = e.target.closest('.delete-btn');
-                if (editBtn) {
-                    editId = editBtn.dataset.id;
-                    const { data } = await supabase.from(tableName).select('*').eq('id', editId).single();
-                    if(data) {
-                        fillForm(data);
-                        form.querySelector('button[type=submit]').textContent = 'Update';
-                        cancelBtn?.classList.remove('hidden');
-                        window.scrollTo(0, 0);
-                    }
-                }
-                if (deleteBtn) {
-                    if (confirm('Yakin ingin menghapus item ini?')) {
-                        const { error } = await supabase.from(tableName).delete().eq('id', deleteBtn.dataset.id);
-                        if (error) alert('Gagal menghapus.');
-                        else await fetchData();
-                    }
-                }
-            });
-            
-            form.addEventListener('submit', submit);
-            cancelBtn?.addEventListener('click', reset);
-
-            return { fetchData };
-        }
         
         // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -285,15 +202,107 @@
                 switchModule(link.hash);
                 window.location.hash = link.hash;
             }));
+
+            // --- Generic CRUD Functionality ---
+            const setupCrud = ({ tableName, formId, listId, idInputId, fileInputId, urlInputId, bucketName, renderList, fillForm, cancelBtnId }) => {
+                const form = document.getElementById(formId);
+                const list = document.getElementById(listId);
+                const idInput = document.getElementById(idInputId);
+                const fileInput = fileInputId ? document.getElementById(fileInputId) : null;
+                const urlInput = urlInputId ? document.getElementById(urlInputId) : null;
+                const cancelBtn = cancelBtnId ? document.getElementById(cancelBtnId) : null;
+                let editId = null;
+                let itemDataCache = [];
+
+                const resetForm = () => {
+                    form.reset();
+                    idInput.value = '';
+                    if (urlInput) urlInput.value = '';
+                    editId = null;
+                    form.querySelector('button[type=submit]').textContent = `Simpan`;
+                    cancelBtn?.classList.add('hidden');
+                };
+
+                const fetchData = async () => {
+                    const { data, error } = await supabase.from(tableName).select('*').order('created_at', { ascending: false });
+                    if (error) {
+                        console.error(`Error fetching ${tableName}:`, error);
+                        return;
+                    }
+                    itemDataCache = data;
+                    renderList(data, list);
+                };
+
+                const handleFormSubmit = async (e) => {
+                    e.preventDefault();
+                    const submitButton = form.querySelector('button[type=submit]');
+                    submitButton.disabled = true;
+
+                    let fileUrl = urlInput ? urlInput.value : null;
+                    if (fileInput && fileInput.files[0]) {
+                        const { url, error: uploadError } = await uploadFile(bucketName, fileInput.files[0]);
+                        if (uploadError) { submitButton.disabled = false; return; }
+                        fileUrl = url;
+                    }
+
+                    const formData = new FormData(form);
+                    const dataToSubmit = {};
+                    formData.forEach((value, key) => { if (value) dataToSubmit[key] = value; });
+
+                    if (urlInputId === 'image-url' || urlInputId === 'news-image-url') dataToSubmit.image_url = fileUrl;
+                    else if (urlInputId === 'partner-logo-url') dataToSubmit.logo_url = fileUrl;
+                    else if (urlInputId === 'org-photo-url') dataToSubmit.photo_url = fileUrl;
+
+                    const { error } = editId
+                        ? await supabase.from(tableName).update(dataToSubmit).eq('id', editId)
+                        : await supabase.from(tableName).insert([dataToSubmit]);
+
+                    if (error) {
+                        alert(`Gagal menyimpan: ${error.message}`);
+                    } else {
+                        resetForm();
+                        await fetchData();
+                    }
+                    submitButton.disabled = false;
+                };
+
+                list.addEventListener('click', (e) => {
+                    const editBtn = e.target.closest('.edit-btn');
+                    if (editBtn) {
+                        const item = itemDataCache.find(i => i.id === editBtn.dataset.id);
+                        if (item) {
+                            editId = item.id;
+                            fillForm(item);
+                            form.querySelector('button[type=submit]').textContent = 'Update';
+                            cancelBtn?.classList.remove('hidden');
+                            window.scrollTo(0, 0);
+                        }
+                    }
+                    const deleteBtn = e.target.closest('.delete-btn');
+                    if (deleteBtn) {
+                        if (confirm('Yakin ingin menghapus item ini?')) {
+                            supabase.from(tableName).delete().eq('id', deleteBtn.dataset.id).then(({ error }) => {
+                                if (error) alert('Gagal menghapus.');
+                                else fetchData();
+                            });
+                        }
+                    }
+                });
+
+                form.addEventListener('submit', handleFormSubmit);
+                cancelBtn?.addEventListener('click', resetForm);
+
+                return { fetchData };
+            };
             
-            // --- Program Module Logic ---
+            // --- Program Module Setup ---
             const programForm = document.getElementById('program-form');
             const programsList = document.getElementById('programs-list');
             const programSelect = document.getElementById('program-select');
             const registrantsList = document.getElementById('registrants-list');
             const exportExcelBtn = document.getElementById('export-excel-btn');
             let programsData = [];
-
+            
             const fetchPrograms = async () => {
                 const { data, error } = await supabase.from('events').select('*').order('created_at', { ascending: false });
                 if (error) { console.error('Error fetching programs:', error); return; }
@@ -305,26 +314,23 @@
                     programSelect.innerHTML += `<option value="${p.id}">${p.title}</option>`;
                 });
             };
-             const fetchRegistrants = async (eventId) => {
+            
+            const fetchRegistrants = async (eventId) => {
                 if (!eventId) {
                     registrantsList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Silakan pilih program terlebih dahulu.</td></tr>';
-                    exportExcelBtn.disabled = true;
-                    return;
+                    exportExcelBtn.disabled = true; return;
                 }
                 registrantsList.innerHTML = '<tr><td colspan="5" class="text-center py-4">Memuat...</td></tr>';
                 const { data, error } = await supabase.from('event_registrations').select(`*, profiles(*)`).eq('event_id', eventId).order('created_at', { ascending: false });
-                if (error) { console.error('Error fetching registrants:', error); return; }
+                if (error || !data) { registrantsList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-500">Gagal memuat data.</td></tr>'; return; }
                 if (data.length === 0) {
                     registrantsList.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada pendaftar.</td></tr>';
-                    exportExcelBtn.disabled = true;
-                    return;
+                    exportExcelBtn.disabled = true; return;
                 }
                 registrantsList.innerHTML = data.map(r => `
                     <tr class="bg-white border-b">
-                        <td class="px-6 py-4">${r.profiles?.full_name || 'N/A'}</td>
-                        <td class="px-6 py-4">${r.profiles?.email || 'N/A'}</td>
-                        <td class="px-6 py-4">${r.phone_number || 'N/A'}</td>
-                        <td class="px-6 py-4">${formatDate(r.created_at)}</td>
+                        <td class="px-6 py-4">${r.profiles?.full_name || 'N/A'}</td><td class="px-6 py-4">${r.profiles?.email || 'N/A'}</td>
+                        <td class="px-6 py-4">${r.phone_number || 'N/A'}</td><td class="px-6 py-4">${formatDate(r.created_at)}</td>
                         <td class="px-6 py-4"><a href="${r.payment_proof_url}" target="_blank" class="text-blue-600">Lihat</a></td>
                     </tr>`).join('');
                 exportExcelBtn.disabled = false;
@@ -336,74 +342,13 @@
                 if (!eventId) return;
                 const { data, error } = await supabase.from('event_registrations').select('*, profiles(*)').eq('event_id', eventId);
                 if (error || !data) { alert('Gagal ekspor data.'); return; }
-                const flattenedData = data.map(r => ({
-                    "Waktu Daftar": formatDate(r.created_at),
-                    "Nama Lengkap": r.profiles?.full_name,
-                    "Email": r.profiles?.email,
-                    "No. Telepon": r.phone_number,
-                    "Link Bukti Bayar": r.payment_proof_url
-                }));
+                const flattenedData = data.map(r => ({ "Waktu Daftar": formatDate(r.created_at), "Nama Lengkap": r.profiles?.full_name, "Email": r.profiles?.email, "No. Telepon": r.phone_number, "Link Bukti Bayar": r.payment_proof_url }));
                 const worksheet = XLSX.utils.json_to_sheet(flattenedData);
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Pendaftar");
                 XLSX.writeFile(workbook, `Pendaftar_${programTitle.replace(/\s+/g, "_")}.xlsx`);
             };
 
-            // --- News Manager ---
-            const newsManager = createCrudManager({
-                tableName: 'news', formId: 'news-form', listId: 'news-list', idInputId: 'news-id', fileInputId: 'news-image-upload', urlInputId: 'news-image-url', bucketName: 'news-images', cancelBtnId: 'cancel-edit-news',
-                renderList: (items, list) => { list.innerHTML = items.map(i => `<tr><td class="px-6 py-4">${i.title}</td><td class="px-6 py-4">${formatDate(i.created_at)}</td><td class="px-6 py-4"><button data-id="${i.id}" class="edit-btn text-blue-600">Edit</button> <button data-id="${i.id}" class="delete-btn text-red-600">Hapus</button></td></tr>`).join(''); },
-                fillForm: (data) => {
-                    document.getElementById('news-id').value = data.id;
-                    document.getElementById('news-title').value = data.title;
-                    document.getElementById('news-content').value = data.content;
-                    document.getElementById('news-image-url').value = data.image_url;
-                }
-            });
-
-            // --- Partner Manager ---
-            const partnerManager = createCrudManager({
-                tableName: 'partners', formId: 'partner-form', listId: 'partners-list', idInputId: 'partner-id', fileInputId: 'partner-logo-upload', urlInputId: 'partner-logo-url', bucketName: 'partner-logos', cancelBtnId: 'cancel-edit-partner',
-                renderList: (items, list) => { list.innerHTML = items.map(i => `<div class="relative group p-2 border rounded-md text-center bg-white"><img src="${i.logo_url}" class="h-20 mx-auto object-contain"><p class="mt-2 text-sm">${i.name}</p><button data-id="${i.id}" class="delete-btn absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 opacity-0 group-hover:opacity-100">&times;</button></div>`).join(''); },
-                fillForm: () => {} // No edit for partners, only delete
-            });
-
-            // --- Organization Manager ---
-            const orgManager = createCrudManager({
-                tableName: 'organization_structure', formId: 'org-form', listId: 'org-list', idInputId: 'org-id', fileInputId: 'org-photo-upload', urlInputId: 'org-photo-url', bucketName: 'org-photos', cancelBtnId: 'cancel-edit-org',
-                renderList: (items, list) => { list.innerHTML = items.map(i => `<tr><td class="px-6 py-4">${i.name}</td><td class="px-6 py-4">${i.position}</td><td class="px-6 py-4"><button data-id="${i.id}" class="edit-btn text-blue-600">Edit</button> <button data-id="${i.id}" class="delete-btn text-red-600">Hapus</button></td></tr>`).join(''); },
-                fillForm: (data) => {
-                    document.getElementById('org-id').value = data.id;
-                    document.getElementById('org-name').value = data.name;
-                    document.getElementById('org-position').value = data.position;
-                    document.getElementById('org-photo-url').value = data.photo_url;
-                }
-            });
-            
-            // --- App Initialization ---
-            const checkUser = async () => {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    loginSection.classList.add('hidden');
-                    dashboardSection.classList.remove('hidden');
-                    const initialHash = window.location.hash || '#programs';
-                    switchModule(initialHash);
-                    
-                    await Promise.all([ fetchPrograms(), newsManager.fetchData(), partnerManager.fetchData(), orgManager.fetchData() ]);
-                } else {
-                    loginSection.classList.remove('hidden');
-                    dashboardSection.classList.add('hidden');
-                }
-            };
-            
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const { error } = await supabase.auth.signInWithPassword({ email: e.target.email.value, password: e.target.password.value });
-                if (error) alert(error.message); else await checkUser();
-            });
-            logoutButton.addEventListener('click', async () => { await supabase.auth.signOut(); await checkUser(); });
-            
-            // Event Listeners for Program Module
             programForm.addEventListener('submit', async (e) => {
                  e.preventDefault();
                 const submitButton = e.target.querySelector('button[type=submit]');
@@ -435,15 +380,12 @@
                 if (editBtn) {
                     const event = programsData.find(p => p.id === editBtn.dataset.id);
                     if (!event) return;
-                    document.getElementById('program-id').value = event.id;
-                    document.getElementById('title').value = event.title; document.getElementById('organizer').value = event.organizer; document.getElementById('description').value = event.description;
+                    document.getElementById('program-id').value = event.id; document.getElementById('title').value = event.title; document.getElementById('organizer').value = event.organizer; document.getElementById('description').value = event.description;
                     document.getElementById('start-date').value = convertFromDbFormat(event.start_date); document.getElementById('end-date').value = convertFromDbFormat(event.end_date);
                     document.getElementById('location').value = event.location; document.getElementById('image-url').value = event.image_url;
                     document.getElementById('activity-type').value = event.activity_type; document.getElementById('category').value = event.category;
-                    document.getElementById('quota').value = event.quota; document.getElementById('fee').value = event.fee;
-                    document.getElementById('tasks').value = event.tasks; document.getElementById('criteria').value = event.criteria;
-                    document.getElementById('form-button-text').textContent = 'Update Program';
-                    document.getElementById('cancel-edit').classList.remove('hidden');
+                    document.getElementById('quota').value = event.quota; document.getElementById('fee').value = event.fee; document.getElementById('tasks').value = event.tasks; document.getElementById('criteria').value = event.criteria;
+                    document.getElementById('form-button-text').textContent = 'Update Program'; document.getElementById('cancel-edit').classList.remove('hidden');
                 }
                 const deleteBtn = e.target.closest('.delete-btn');
                 if (deleteBtn) { if (confirm('Yakin?')) { supabase.from('events').delete().eq('id', deleteBtn.dataset.id).then(() => fetchPrograms()); } }
@@ -456,6 +398,51 @@
             programSelect.addEventListener('change', (e) => fetchRegistrants(e.target.value));
             exportExcelBtn.addEventListener('click', exportToExcel);
 
+            // --- Managers for Other Modules ---
+            const newsManager = setupCrud({
+                tableName: 'news', formId: 'news-form', listId: 'news-list', idInputId: 'news-id', fileInputId: 'news-image-upload', urlInputId: 'news-image-url', bucketName: 'news-images', cancelBtnId: 'cancel-edit-news',
+                renderList: (items, list) => { list.innerHTML = items.map(i => `<tr><td class="px-6 py-4">${i.title}</td><td class="px-6 py-4">${formatDate(i.created_at)}</td><td class="px-6 py-4 flex space-x-2"><button data-id="${i.id}" class="edit-btn text-blue-600"><i class="fas fa-edit"></i></button><button data-id="${i.id}" class="delete-btn text-red-600"><i class="fas fa-trash"></i></button></td></tr>`).join(''); },
+                fillForm: (data) => {
+                    document.getElementById('news-id').value = data.id; document.getElementById('news-title').value = data.title;
+                    document.getElementById('news-content').value = data.content; document.getElementById('news-image-url').value = data.image_url;
+                }
+            });
+            const partnerManager = setupCrud({
+                tableName: 'partners', formId: 'partner-form', listId: 'partners-list', idInputId: 'partner-id', fileInputId: 'partner-logo-upload', urlInputId: 'partner-logo-url', bucketName: 'partner-logos', cancelBtnId: 'cancel-edit-partner',
+                renderList: (items, list) => { list.innerHTML = items.map(i => `<div class="relative group p-2 border rounded-md text-center bg-white"><img src="${i.logo_url}" class="h-20 mx-auto object-contain"><p class="mt-2 text-sm">${i.name}</p><button data-id="${i.id}" class="delete-btn absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 opacity-0 group-hover:opacity-100">&times;</button></div>`).join(''); },
+                fillForm: (data) => { document.getElementById('partner-id').value = data.id; document.getElementById('partner-name').value = data.name; document.getElementById('partner-logo-url').value = data.logo_url; }
+            });
+            const orgManager = setupCrud({
+                tableName: 'organization_structure', formId: 'org-form', listId: 'org-list', idInputId: 'org-id', fileInputId: 'org-photo-upload', urlInputId: 'org-photo-url', bucketName: 'org-photos', cancelBtnId: 'cancel-edit-org',
+                renderList: (items, list) => { list.innerHTML = items.map(i => `<tr><td class="px-6 py-4">${i.name}</td><td class="px-6 py-4">${i.position}</td><td class="px-6 py-4 flex space-x-2"><button data-id="${i.id}" class="edit-btn text-blue-600"><i class="fas fa-edit"></i></button><button data-id="${i.id}" class="delete-btn text-red-600"><i class="fas fa-trash"></i></button></td></tr>`).join(''); },
+                fillForm: (data) => {
+                    document.getElementById('org-id').value = data.id; document.getElementById('org-name').value = data.name;
+                    document.getElementById('org-position').value = data.position; document.getElementById('org-photo-url').value = data.photo_url;
+                }
+            });
+            
+            // --- App Initialization & Auth ---
+            const checkUser = async () => {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    loginSection.classList.add('hidden');
+                    dashboardSection.classList.remove('hidden');
+                    const initialHash = window.location.hash || '#programs';
+                    switchModule(initialHash);
+                    await Promise.all([ fetchPrograms(), newsManager.fetchData(), partnerManager.fetchData(), orgManager.fetchData() ]);
+                } else {
+                    loginSection.classList.remove('hidden');
+                    dashboardSection.classList.add('hidden');
+                }
+            };
+            
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const { error } = await supabase.auth.signInWithPassword({ email: e.target.email.value, password: e.target.password.value });
+                if (error) alert(error.message); else await checkUser();
+            });
+            logoutButton.addEventListener('click', async () => { await supabase.auth.signOut(); await checkUser(); });
+            
             checkUser();
         });
     </script>
