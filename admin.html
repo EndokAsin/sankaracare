@@ -75,19 +75,19 @@
                             <form id="program-form" class="mb-8 p-4 border rounded-lg bg-gray-50 space-y-4">
                                 <input type="hidden" id="program-id">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <input type="text" name="title" id="title" placeholder="Judul Program" required class="w-full px-4 py-2 border rounded-md">
-                                    <input type="text" name="organizer" id="organizer" placeholder="Penyelenggara" class="w-full px-4 py-2 border rounded-md">
+                                    <input type="text" name="title" id="program-title" placeholder="Judul Program" required class="w-full px-4 py-2 border rounded-md">
+                                    <input type="text" name="organizer" id="program-organizer" placeholder="Penyelenggara" class="w-full px-4 py-2 border rounded-md">
                                 </div>
-                                <textarea name="description" id="description" placeholder="Deskripsi Program" class="w-full px-4 py-2 border rounded-md"></textarea>
+                                <textarea name="description" id="program-description" placeholder="Deskripsi Program" class="w-full px-4 py-2 border rounded-md"></textarea>
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <div><label for="start-date" class="text-sm font-medium">Tanggal Mulai</label><input type="datetime-local" name="start_date" id="start-date" required class="w-full px-4 py-2 border rounded-md"></div>
                                     <div><label for="end-date" class="text-sm font-medium">Tanggal Selesai</label><input type="datetime-local" name="end_date" id="end-date" class="w-full px-4 py-2 border rounded-md"></div>
-                                    <input type="text" name="location" id="location" placeholder="Lokasi" class="w-full px-4 py-2 border rounded-md self-end">
+                                    <input type="text" name="location" id="program-location" placeholder="Lokasi" class="w-full px-4 py-2 border rounded-md self-end">
                                     <div class="self-end"><label for="image-upload" class="text-sm font-medium">Poster</label><input type="file" id="image-upload" accept="image/*" class="w-full text-sm"><input type="hidden" id="image-url"></div>
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <select name="activity_type" id="activity-type" class="w-full px-4 py-2 border rounded-md"><option value="">Jenis Kegiatan</option><option value="Tatap Muka">Tatap Muka</option><option value="Online">Online</option></select>
-                                    <input type="text" name="category" id="category" placeholder="Kategori" class="w-full px-4 py-2 border rounded-md">
+                                    <input type="text" name="category" id="program-category" placeholder="Kategori" class="w-full px-4 py-2 border rounded-md">
                                     <input type="number" name="quota" id="quota" placeholder="Kuota Peserta" class="w-full px-4 py-2 border rounded-md">
                                     <input type="number" name="fee" id="fee" placeholder="Biaya (Rp)" class="w-full px-4 py-2 border rounded-md">
                                 </div>
@@ -97,7 +97,7 @@
                                 </div>
                                 <div class="flex space-x-2">
                                     <button type="submit" class="px-6 py-2 text-white bg-green-600 rounded-md"><i class="fas fa-save mr-2"></i><span id="form-button-text">Simpan Program</span></button>
-                                    <button type="button" id="cancel-edit" class="hidden px-6 py-2 bg-gray-200 rounded-md"><i class="fas fa-times mr-2"></i>Batal</button>
+                                    <button type="button" id="cancel-edit-program" class="hidden px-6 py-2 bg-gray-200 rounded-md"><i class="fas fa-times mr-2"></i>Batal</button>
                                 </div>
                             </form>
                             <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="px-6 py-3">Judul</th><th class="px-6 py-3">Tanggal</th><th class="px-6 py-3">Lokasi</th><th class="px-6 py-3">Aksi</th></tr></thead><tbody id="programs-list"></tbody></table></div>
@@ -144,10 +144,15 @@
                             <input type="hidden" id="org-id">
                             <input type="text" name="name" id="org-name" placeholder="Nama Lengkap" required class="w-full px-4 py-2 border rounded-md">
                             <input type="text" name="position" id="org-position" placeholder="Jabatan" required class="w-full px-4 py-2 border rounded-md">
+                             <select name="category" id="org-category" required class="w-full px-4 py-2 border rounded-md">
+                                <option value="" disabled selected>Pilih Kategori</option>
+                                <option value="Tim Inti">Tim Inti</option>
+                                <option value="Tim Regional">Tim Regional</option>
+                            </select>
                             <div><label for="org-photo-upload" class="text-sm font-medium">Foto</label><input type="file" id="org-photo-upload" accept="image/*" class="w-full text-sm"><input type="hidden" id="org-photo-url"></div>
                             <div class="flex space-x-2"><button type="submit" class="px-6 py-2 text-white bg-green-600 rounded-md">Simpan Anggota</button><button type="button" id="cancel-edit-org" class="hidden px-6 py-2 bg-gray-200 rounded-md">Batal</button></div>
                         </form>
-                        <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="px-6 py-3">Nama</th><th class="px-6 py-3">Jabatan</th><th class="px-6 py-3">Aksi</th></tr></thead><tbody id="org-list"></tbody></table></div>
+                        <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="px-6 py-3">Nama</th><th class="px-6 py-3">Jabatan</th><th class="px-6 py-3">Kategori</th><th class="px-6 py-3">Aksi</th></tr></thead><tbody id="org-list"></tbody></table></div>
                     </div>
 
                 </main>
@@ -182,7 +187,7 @@
             const { data } = supabase.storage.from(bucketName).getPublicUrl(fileName);
             return { url: data.publicUrl, error: null };
         };
-        
+
         // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             const loginSection = document.getElementById('login-section');
@@ -219,7 +224,7 @@
                     idInput.value = '';
                     if (urlInput) urlInput.value = '';
                     editId = null;
-                    form.querySelector('button[type=submit]').textContent = `Simpan`;
+                    form.querySelector('button[type=submit]').textContent = `Simpan ${tableName.charAt(0).toUpperCase() + tableName.slice(1)}`;
                     cancelBtn?.classList.add('hidden');
                 };
 
@@ -248,8 +253,9 @@
                     const formData = new FormData(form);
                     const dataToSubmit = {};
                     formData.forEach((value, key) => { if (value) dataToSubmit[key] = value; });
-
-                    if (urlInputId === 'image-url' || urlInputId === 'news-image-url') dataToSubmit.image_url = fileUrl;
+                    
+                    if (urlInputId === 'image-url') dataToSubmit.image_url = fileUrl;
+                    else if (urlInputId === 'news-image-url') dataToSubmit.image_url = fileUrl;
                     else if (urlInputId === 'partner-logo-url') dataToSubmit.logo_url = fileUrl;
                     else if (urlInputId === 'org-photo-url') dataToSubmit.photo_url = fileUrl;
 
@@ -348,7 +354,7 @@
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Pendaftar");
                 XLSX.writeFile(workbook, `Pendaftar_${programTitle.replace(/\s+/g, "_")}.xlsx`);
             };
-
+            
             programForm.addEventListener('submit', async (e) => {
                  e.preventDefault();
                 const submitButton = e.target.querySelector('button[type=submit]');
@@ -362,9 +368,9 @@
                 }
                 const programId = document.getElementById('program-id').value;
                 const programData = {
-                    title: document.getElementById('title').value, organizer: document.getElementById('organizer').value, description: document.getElementById('description').value,
-                    start_date: convertToDbFormat(document.getElementById('start-date').value), end_date: convertToDbFormat(document.getElementById('end-date').value), location: document.getElementById('location').value,
-                    image_url: imageUrl, activity_type: document.getElementById('activity-type').value, category: document.getElementById('category').value,
+                    title: document.getElementById('program-title').value, organizer: document.getElementById('program-organizer').value, description: document.getElementById('program-description').value,
+                    start_date: convertToDbFormat(document.getElementById('start-date').value), end_date: convertToDbFormat(document.getElementById('end-date').value), location: document.getElementById('program-location').value,
+                    image_url: imageUrl, activity_type: document.getElementById('activity-type').value, category: document.getElementById('program-category').value,
                     quota: parseInt(document.getElementById('quota').value) || null, fee: parseInt(document.getElementById('fee').value) || null,
                     tasks: document.getElementById('tasks').value, criteria: document.getElementById('criteria').value
                 };
@@ -380,20 +386,21 @@
                 if (editBtn) {
                     const event = programsData.find(p => p.id === editBtn.dataset.id);
                     if (!event) return;
-                    document.getElementById('program-id').value = event.id; document.getElementById('title').value = event.title; document.getElementById('organizer').value = event.organizer; document.getElementById('description').value = event.description;
+                    document.getElementById('program-id').value = event.id; document.getElementById('program-title').value = event.title; document.getElementById('program-organizer').value = event.organizer; document.getElementById('program-description').value = event.description;
                     document.getElementById('start-date').value = convertFromDbFormat(event.start_date); document.getElementById('end-date').value = convertFromDbFormat(event.end_date);
-                    document.getElementById('location').value = event.location; document.getElementById('image-url').value = event.image_url;
-                    document.getElementById('activity-type').value = event.activity_type; document.getElementById('category').value = event.category;
-                    document.getElementById('quota').value = event.quota; document.getElementById('fee').value = event.fee; document.getElementById('tasks').value = event.tasks; document.getElementById('criteria').value = event.criteria;
-                    document.getElementById('form-button-text').textContent = 'Update Program'; document.getElementById('cancel-edit').classList.remove('hidden');
+                    document.getElementById('program-location').value = event.location; document.getElementById('image-url').value = event.image_url;
+                    document.getElementById('activity-type').value = event.activity_type; document.getElementById('program-category').value = event.category;
+                    document.getElementById('quota').value = event.quota; document.getElementById('fee').value = event.fee;
+                    document.getElementById('tasks').value = event.tasks; document.getElementById('criteria').value = event.criteria;
+                    document.getElementById('form-button-text').textContent = 'Update Program'; document.getElementById('cancel-edit-program').classList.remove('hidden');
                 }
                 const deleteBtn = e.target.closest('.delete-btn');
                 if (deleteBtn) { if (confirm('Yakin?')) { supabase.from('events').delete().eq('id', deleteBtn.dataset.id).then(() => fetchPrograms()); } }
             });
-            document.getElementById('cancel-edit').addEventListener('click', () => {
+            document.getElementById('cancel-edit-program').addEventListener('click', () => {
                 programForm.reset(); document.getElementById('program-id').value = '';
                 document.getElementById('form-button-text').textContent = 'Simpan Program';
-                document.getElementById('cancel-edit').classList.add('hidden');
+                document.getElementById('cancel-edit-program').classList.add('hidden');
             });
             programSelect.addEventListener('change', (e) => fetchRegistrants(e.target.value));
             exportExcelBtn.addEventListener('click', exportToExcel);
@@ -401,7 +408,7 @@
             // --- Managers for Other Modules ---
             const newsManager = setupCrud({
                 tableName: 'news', formId: 'news-form', listId: 'news-list', idInputId: 'news-id', fileInputId: 'news-image-upload', urlInputId: 'news-image-url', bucketName: 'news-images', cancelBtnId: 'cancel-edit-news',
-                renderList: (items, list) => { list.innerHTML = items.map(i => `<tr><td class="px-6 py-4">${i.title}</td><td class="px-6 py-4">${formatDate(i.created_at)}</td><td class="px-6 py-4 flex space-x-2"><button data-id="${i.id}" class="edit-btn text-blue-600"><i class="fas fa-edit"></i></button><button data-id="${i.id}" class="delete-btn text-red-600"><i class="fas fa-trash"></i></button></td></tr>`).join(''); },
+                renderList: (items, list) => { list.innerHTML = items.map(i => `<tr class="bg-white border-b"><td class="px-6 py-4">${i.title}</td><td class="px-6 py-4">${formatDate(i.created_at)}</td><td class="px-6 py-4 flex space-x-2"><button data-id="${i.id}" class="edit-btn text-blue-600"><i class="fas fa-edit"></i></button><button data-id="${i.id}" class="delete-btn text-red-600"><i class="fas fa-trash"></i></button></td></tr>`).join(''); },
                 fillForm: (data) => {
                     document.getElementById('news-id').value = data.id; document.getElementById('news-title').value = data.title;
                     document.getElementById('news-content').value = data.content; document.getElementById('news-image-url').value = data.image_url;
@@ -412,12 +419,28 @@
                 renderList: (items, list) => { list.innerHTML = items.map(i => `<div class="relative group p-2 border rounded-md text-center bg-white"><img src="${i.logo_url}" class="h-20 mx-auto object-contain"><p class="mt-2 text-sm">${i.name}</p><button data-id="${i.id}" class="delete-btn absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 opacity-0 group-hover:opacity-100">&times;</button></div>`).join(''); },
                 fillForm: (data) => { document.getElementById('partner-id').value = data.id; document.getElementById('partner-name').value = data.name; document.getElementById('partner-logo-url').value = data.logo_url; }
             });
-            const orgManager = setupCrud({
-                tableName: 'organization_structure', formId: 'org-form', listId: 'org-list', idInputId: 'org-id', fileInputId: 'org-photo-upload', urlInputId: 'org-photo-url', bucketName: 'org-photos', cancelBtnId: 'cancel-edit-org',
-                renderList: (items, list) => { list.innerHTML = items.map(i => `<tr><td class="px-6 py-4">${i.name}</td><td class="px-6 py-4">${i.position}</td><td class="px-6 py-4 flex space-x-2"><button data-id="${i.id}" class="edit-btn text-blue-600"><i class="fas fa-edit"></i></button><button data-id="${i.id}" class="delete-btn text-red-600"><i class="fas fa-trash"></i></button></td></tr>`).join(''); },
+             const orgManager = setupCrud({
+                tableName: 'organization_structure', formId: 'org-form', listId: 'org-list', idInputId: 'org-id', 
+                fileInputId: 'org-photo-upload', urlInputId: 'org-photo-url', bucketName: 'org-photos', 
+                cancelBtnId: 'cancel-edit-org',
+                renderList: (items, list) => {
+                    list.innerHTML = items.map(i => `
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4">${i.name}</td>
+                            <td class="px-6 py-4">${i.position}</td>
+                            <td class="px-6 py-4">${i.category || 'N/A'}</td>
+                            <td class="px-6 py-4 flex space-x-2">
+                                <button data-id="${i.id}" class="edit-btn text-blue-600"><i class="fas fa-edit"></i></button>
+                                <button data-id="${i.id}" class="delete-btn text-red-600"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>`).join('');
+                },
                 fillForm: (data) => {
-                    document.getElementById('org-id').value = data.id; document.getElementById('org-name').value = data.name;
-                    document.getElementById('org-position').value = data.position; document.getElementById('org-photo-url').value = data.photo_url;
+                    document.getElementById('org-id').value = data.id;
+                    document.getElementById('org-name').value = data.name;
+                    document.getElementById('org-position').value = data.position;
+                    document.getElementById('org-category').value = data.category;
+                    document.getElementById('org-photo-url').value = data.photo_url;
                 }
             });
             
@@ -429,6 +452,7 @@
                     dashboardSection.classList.remove('hidden');
                     const initialHash = window.location.hash || '#programs';
                     switchModule(initialHash);
+                    
                     await Promise.all([ fetchPrograms(), newsManager.fetchData(), partnerManager.fetchData(), orgManager.fetchData() ]);
                 } else {
                     loginSection.classList.remove('hidden');
