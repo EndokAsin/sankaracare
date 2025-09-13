@@ -161,11 +161,12 @@
                                     <th class="px-6 py-3">Nama Lengkap</th>
                                     <th class="px-6 py-3">Email</th>
                                     <th class="px-6 py-3">No. Telepon</th>
+                                    <th class="px-6 py-3">Waktu Daftar</th>
                                     <th class="px-6 py-3">Bukti Bayar</th>
                                 </tr>
                             </thead>
                             <tbody id="registrants-list">
-                                <tr><td colspan="4" class="text-center py-4 text-gray-500">Silakan pilih program terlebih dahulu.</td></tr>
+                                <tr><td colspan="5" class="text-center py-4 text-gray-500">Silakan pilih program terlebih dahulu.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -200,17 +201,12 @@
         // --- Fungsi Helper Tanggal ---
         const convertToDbFormat = (localDateTimeString) => {
             if (!localDateTimeString) return null;
-            // Input 'datetime-local' sudah dalam format 'YYYY-MM-DDTHH:mm'.
-            // Cukup tambahkan informasi zona waktu jika diperlukan, atau langsung kirim.
-            // Supabase akan menginterpretasikannya sebagai waktu lokal dan menyimpannya sebagai timestamp UTC.
             return new Date(localDateTimeString).toISOString();
         };
 
         const convertFromDbFormat = (isoString) => {
             if (!isoString) return '';
-            // Konversi dari string ISO (UTC) ke objek Date, lalu format ke YYYY-MM-DDTHH:mm
             const date = new Date(isoString);
-            // Untuk menghindari masalah timezone, kita buat string manual
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
@@ -227,9 +223,9 @@
                 return;
             }
             
-            programsData = data; // Simpan data
+            programsData = data;
             programsList.innerHTML = '';
-            programSelect.innerHTML = '<option value="">Pilih Program untuk Melihat Pendaftar</option>'; // Reset dropdown
+            programSelect.innerHTML = '<option value="">Pilih Program untuk Melihat Pendaftar</option>';
 
             data.forEach(program => {
                 const row = document.createElement('tr');
@@ -245,7 +241,6 @@
                 `;
                 programsList.appendChild(row);
 
-                // Isi dropdown
                 const option = document.createElement('option');
                 option.value = program.id;
                 option.textContent = program.title;
@@ -268,11 +263,8 @@
             programIdInput.value = event.id;
             document.getElementById('title').value = event.title || '';
             document.getElementById('description').value = event.description || '';
-            
-            // Gunakan fungsi konversi yang baru
             document.getElementById('start-date').value = convertFromDbFormat(event.start_date);
             document.getElementById('end-date').value = convertFromDbFormat(event.end_date);
-            
             document.getElementById('location').value = event.location || '';
             document.getElementById('image-url').value = event.image_url || '';
             document.getElementById('organizer').value = event.organizer || '';
@@ -324,7 +316,6 @@
             const programData = {
                 title: document.getElementById('title').value,
                 description: document.getElementById('description').value,
-                // Gunakan fungsi konversi baru saat menyimpan
                 start_date: convertToDbFormat(document.getElementById('start-date').value),
                 end_date: convertToDbFormat(document.getElementById('end-date').value),
                 location: document.getElementById('location').value,
@@ -358,26 +349,27 @@
 
         const fetchRegistrants = async (eventId) => {
             if (!eventId) {
-                registrantsList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">Silakan pilih program terlebih dahulu.</td></tr>';
+                registrantsList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Silakan pilih program terlebih dahulu.</td></tr>';
                 exportExcelBtn.disabled = true;
                 return;
             }
 
-            registrantsList.innerHTML = '<tr><td colspan="4" class="text-center py-4">Memuat data pendaftar...</td></tr>';
+            registrantsList.innerHTML = '<tr><td colspan="5" class="text-center py-4">Memuat data pendaftar...</td></tr>';
             
             const { data, error } = await supabase
                 .from('event_registrations')
-                .select(`phone_number, payment_proof_url, profiles (full_name, email)`)
-                .eq('event_id', eventId);
+                .select(`created_at, phone_number, payment_proof_url, profiles (full_name, email)`)
+                .eq('event_id', eventId)
+                .order('created_at', { ascending: false });
 
             if (error) {
                 console.error('Error fetching registrants:', error);
-                registrantsList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-500">Gagal memuat data.</td></tr>';
+                registrantsList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-500">Gagal memuat data.</td></tr>';
                 return;
             }
 
             if (data.length === 0) {
-                registrantsList.innerHTML = '<tr><td colspan="4" class="text-center py-4">Belum ada pendaftar untuk program ini.</td></tr>';
+                registrantsList.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada pendaftar untuk program ini.</td></tr>';
                 exportExcelBtn.disabled = true;
                 return;
             }
@@ -391,6 +383,7 @@
                     <td class="px-6 py-4">${profile?.full_name || 'N/A'}</td>
                     <td class="px-6 py-4">${profile?.email || 'N/A'}</td>
                     <td class="px-6 py-4">${reg.phone_number || 'N/A'}</td>
+                    <td class="px-6 py-4">${new Date(reg.created_at).toLocaleString('id-ID')}</td>
                     <td class="px-6 py-4">
                         <a href="${reg.payment_proof_url}" target="_blank" class="text-blue-600 hover:underline">Lihat Bukti</a>
                     </td>
@@ -402,32 +395,43 @@
         };
 
         const exportToExcel = async () => {
+            exportExcelBtn.disabled = true;
+            exportExcelBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengekspor...';
+
             const eventId = programSelect.value;
             const programTitle = programSelect.options[programSelect.selectedIndex].text;
             if (!eventId) return;
 
-            const { data, error } = await supabase
-                .from('event_registrations')
-                .select('phone_number, payment_proof_url, profiles(full_name, email)')
-                .eq('event_id', eventId);
+            try {
+                const { data, error } = await supabase
+                    .from('event_registrations')
+                    .select('created_at, phone_number, payment_proof_url, profiles(full_name, email)')
+                    .eq('event_id', eventId);
 
-            if (error || !data) {
+                if (error || !data) throw error || new Error("Data tidak ditemukan");
+
+                const flattenedData = data.map(row => ({
+                    "Waktu Daftar": new Date(row.created_at).toLocaleString('id-ID'),
+                    "Nama Lengkap": row.profiles?.full_name || '',
+                    "Email": row.profiles?.email || '',
+                    "No. Telepon": row.phone_number || '',
+                    "Link Bukti Bayar": row.payment_proof_url || ''
+                }));
+                
+                const worksheet = XLSX.utils.json_to_sheet(flattenedData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Pendaftar");
+                XLSX.writeFile(workbook, `Pendaftar_${programTitle.replace(/\s+/g, "_")}.xlsx`);
+
+            } catch (error) {
+                console.error("Error exporting to Excel:", error);
                 alert('Gagal mengambil data untuk ekspor.');
-                return;
+            } finally {
+                exportExcelBtn.disabled = false;
+                exportExcelBtn.innerHTML = '<i class="fas fa-file-excel mr-2"></i>Ekspor ke Excel';
             }
-
-            const flattenedData = data.map(row => ({
-                "Nama Lengkap": row.profiles?.full_name || '',
-                "Email": row.profiles?.email || '',
-                "No. Telepon": row.phone_number || '',
-                "Link Bukti Bayar": row.payment_proof_url || ''
-            }));
-            
-            const worksheet = XLSX.utils.json_to_sheet(flattenedData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Pendaftar");
-            XLSX.writeFile(workbook, `Pendaftar_${programTitle.replace(/ /g, "_")}.xlsx`);
         };
+
 
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
