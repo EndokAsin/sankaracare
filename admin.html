@@ -5,383 +5,362 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Sankara</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; }
-        .toast {
-            visibility: hidden;
-            min-width: 250px;
-            margin-left: -125px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 2px;
-            padding: 16px;
-            position: fixed;
-            z-index: 100;
-            left: 50%;
-            bottom: 30px;
-            transition: visibility 0.5s, opacity 0.5s linear;
-            opacity: 0;
-        }
-        .toast.show {
-            visibility: visible;
-            opacity: 1;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
     </style>
 </head>
 <body class="bg-gray-100">
 
-    <!-- Login & Register Section -->
-    <div id="auth-section" class="flex items-center justify-center min-h-screen">
-        <div class="w-full max-w-md">
-            <!-- Login Form -->
-            <form id="login-form" class="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
-                <h2 class="text-2xl font-bold text-center mb-6">Admin Login</h2>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="login-email">Email</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="login-email" type="email" placeholder="Email">
+    <!-- Kontainer Utama -->
+    <div id="app-container">
+
+        <!-- Halaman Login -->
+        <div id="login-section" class="flex items-center justify-center min-h-screen">
+            <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+                <div class="text-center">
+                    <img src="logo.png" alt="Sankara Logo" class="w-24 h-24 mx-auto mb-4">
+                    <h1 class="text-2xl font-bold text-gray-800">Admin Panel Login</h1>
+                    <p class="text-gray-500">Silakan masuk untuk melanjutkan</p>
                 </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="login-password">Password</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" id="login-password" type="password" placeholder="******************">
+
+                <!-- Form Login -->
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="email" class="text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="email" required class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label for="password" class="text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="password" required class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <button type="submit" class="w-full py-2 text-white bg-green-600 rounded-md hover:bg-green-700">Login</button>
+                </form>
+                
+                 <!-- Form Registrasi (disembunyikan secara default) -->
+                <form id="register-form" class="hidden space-y-6">
+                    <div>
+                        <label for="register-email" class="text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="register-email" required class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <div>
+                        <label for="register-password" class="text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="register-password" required minlength="6" class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                    <button type="submit" class="w-full py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700">Register</button>
+                </form>
+
+                <div id="auth-notification" class="hidden p-3 text-center text-sm rounded-md"></div>
+                
+                <div class="text-center">
+                    <button id="toggle-auth-mode" class="text-sm text-blue-600 hover:underline">Belum punya akun? Register</button>
                 </div>
-                <div class="flex items-center justify-between">
-                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
-                        Sign In
-                    </button>
-                    <a id="show-register" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="#">
-                        Register new admin?
-                    </a>
+            </div>
+        </div>
+
+        <!-- Dashboard Admin (hidden by default) -->
+        <div id="dashboard-section" class="hidden">
+            <header class="bg-white shadow-md">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <h1 class="text-xl font-bold text-gray-800">Sankara Dashboard</h1>
+                    <button id="logout-button" class="px-4 py-2 text-sm text-white bg-red-600 rounded-md hover:bg-red-700">Logout</button>
                 </div>
-            </form>
-            <!-- Register Form -->
-            <form id="register-form" class="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4 hidden">
-                <h2 class="text-2xl font-bold text-center mb-6">Register Admin</h2>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="register-email">Email</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="register-email" type="email" placeholder="Email">
+            </header>
+            
+            <main class="container mx-auto p-6">
+                <!-- Program Management Section -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-bold mb-4">Manajemen Program</h2>
+
+                    <!-- Form Tambah/Edit Program -->
+                    <form id="program-form" class="mb-8 p-4 border rounded-lg bg-gray-50 space-y-4">
+                        <input type="hidden" id="program-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" id="title" placeholder="Judul Program" required class="w-full px-4 py-2 border rounded-md">
+                             <input type="text" id="organizer" placeholder="Penyelenggara (cth: Peduly Semarang)" class="w-full px-4 py-2 border rounded-md">
+                        </div>
+                        <textarea id="description" placeholder="Deskripsi Program" class="w-full px-4 py-2 border rounded-md"></textarea>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label for="start-date" class="text-sm font-medium">Tanggal Mulai</label>
+                                <input type="datetime-local" id="start-date" required class="w-full px-4 py-2 border rounded-md">
+                            </div>
+                            <div>
+                                <label for="end-date" class="text-sm font-medium">Tanggal Selesai (Opsional)</label>
+                                <input type="datetime-local" id="end-date" class="w-full px-4 py-2 border rounded-md">
+                            </div>
+                            <input type="text" id="location" placeholder="Lokasi (cth: Kota Semarang)" class="w-full px-4 py-2 border rounded-md self-end">
+                            <input type="url" id="image-url" placeholder="URL Gambar Poster" class="w-full px-4 py-2 border rounded-md self-end">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <select id="activity-type" class="w-full px-4 py-2 border rounded-md">
+                                <option value="">Pilih Jenis Kegiatan</option>
+                                <option value="Tatap Muka">Tatap Muka</option>
+                                <option value="Online">Online</option>
+                            </select>
+                            <input type="text" id="category" placeholder="Kategori (cth: Pengembangan Anak Muda)" class="w-full px-4 py-2 border rounded-md">
+                            <input type="number" id="quota" placeholder="Kuota Peserta" class="w-full px-4 py-2 border rounded-md">
+                            <input type="number" id="fee" placeholder="Biaya Pendaftaran (Rp)" class="w-full px-4 py-2 border rounded-md">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <textarea id="tasks" placeholder="Tugas Volunteer (satu per baris)" class="w-full px-4 py-2 border rounded-md h-24"></textarea>
+                            <textarea id="criteria" placeholder="Kriteria Volunteer (satu per baris)" class="w-full px-4 py-2 border rounded-md h-24"></textarea>
+                        </div>
+                        <div class="flex space-x-2">
+                             <button type="submit" class="px-6 py-2 text-white bg-green-600 rounded-md hover:bg-green-700">
+                                <i class="fas fa-save mr-2"></i><span id="form-button-text">Simpan Program</span>
+                            </button>
+                            <button type="button" id="cancel-edit" class="hidden px-6 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                                <i class="fas fa-times mr-2"></i>Batal
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Daftar Program -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3">Judul</th>
+                                    <th class="px-6 py-3">Tanggal Mulai</th>
+                                    <th class="px-6 py-3">Lokasi</th>
+                                    <th class="px-6 py-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="programs-list">
+                                <!-- Data program akan dimuat di sini -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="register-password">Password</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" id="register-password" type="password" placeholder="******************">
-                </div>
-                <div class="flex items-center justify-between">
-                    <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
-                        Register
-                    </button>
-                    <a id="show-login" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="#">
-                        Already have an account?
-                    </a>
-                </div>
-            </form>
+            </main>
         </div>
     </div>
 
-    <!-- Main Content (Dashboard) -->
-    <div id="main-content" class="hidden">
-        <header class="bg-white shadow p-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold">Sankara Admin Dashboard</h1>
-            <div>
-                <span id="user-email" class="text-sm mr-4"></span>
-                <button id="logout-button" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm">Logout</button>
-            </div>
-        </header>
-
-        <div class="p-8">
-            <h2 class="text-2xl font-bold mb-6">Manajemen Program</h2>
-
-            <!-- Form to Add/Edit Program -->
-            <form id="program-form" class="bg-white p-6 rounded-lg shadow-md mb-8">
-                <input type="hidden" id="program-id">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="title" class="block text-sm font-medium text-gray-700">Judul Program*</label>
-                        <input type="text" id="title" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
-                    </div>
-                     <div>
-                        <label for="created_by" class="block text-sm font-medium text-gray-700">Dibuat oleh*</label>
-                        <input type="text" id="created_by" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="cth: Peduly Semarang" required>
-                    </div>
-                    
-                    <div class="md:col-span-2">
-                        <label for="description" class="block text-sm font-medium text-gray-700">Deskripsi</label>
-                        <textarea id="description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
-                    </div>
-
-                    <div>
-                        <label for="category" class="block text-sm font-medium text-gray-700">Kategori</label>
-                        <input type="text" id="category" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="cth: Pengembangan Anak Muda">
-                    </div>
-                     <div>
-                        <label for="activity_type" class="block text-sm font-medium text-gray-700">Jenis Kegiatan</label>
-                         <select id="activity_type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                            <option>Tatap Muka</option>
-                            <option>Online</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="start_date" class="block text-sm font-medium text-gray-700">Tanggal Mulai</label>
-                        <input type="date" id="start_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                    </div>
-                    <div>
-                        <label for="start_time" class="block text-sm font-medium text-gray-700">Waktu Mulai</label>
-                        <input type="time" id="start_time" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                    </div>
-
-                     <div>
-                        <label for="location" class="block text-sm font-medium text-gray-700">Lokasi</label>
-                        <input type="text" id="location" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="cth: Kota Semarang">
-                    </div>
-
-                    <div>
-                        <label for="poster_url" class="block text-sm font-medium text-gray-700">URL Poster</label>
-                        <input type="url" id="poster_url" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                    </div>
-
-                    <div>
-                        <label for="quota" class="block text-sm font-medium text-gray-700">Kuota Volunteer</label>
-                        <input type="number" id="quota" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="cth: 25">
-                    </div>
-                     <div>
-                        <label for="fee" class="block text-sm font-medium text-gray-700">Biaya Pendaftaran (Rp)</label>
-                        <input type="number" id="fee" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="cth: 200000">
-                    </div>
-                    
-                     <div class="md:col-span-2">
-                        <label for="tasks" class="block text-sm font-medium text-gray-700">Tugas Volunteer (pisahkan dengan baris baru)</label>
-                        <textarea id="tasks" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label for="criteria" class="block text-sm font-medium text-gray-700">Kriteria Volunteer (pisahkan dengan baris baru)</label>
-                        <textarea id="criteria" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
-                    </div>
-
-                     <div>
-                        <label for="doc_url" class="block text-sm font-medium text-gray-700">URL Dokumen Tambahan</label>
-                        <input type="url" id="doc_url" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                    </div>
-
-                </div>
-                <div class="mt-6 flex justify-end space-x-4">
-                    <button type="button" id="cancel-edit" class="bg-gray-200 hover:bg-gray-300 text-black font-bold py-2 px-4 rounded hidden">Batal</button>
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Simpan Program</button>
-                </div>
-            </form>
-
-            <!-- Table of Programs -->
-            <div class="bg-white p-6 rounded-lg shadow-md overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-500">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">Judul</th>
-                            <th scope="col" class="px-6 py-3">Lokasi</th>
-                            <th scope="col" class="px-6 py-3">Tanggal Mulai</th>
-                             <th scope="col" class="px-6 py-3">Kuota</th>
-                            <th scope="col" class="px-6 py-3 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="programs-table-body">
-                        <!-- Rows will be inserted by JavaScript -->
-                    </tbody>
-                </table>
-                 <p id="programs-loader" class="text-center text-gray-500 py-4">Memuat data...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="toast"></div>
-
+    <!-- JavaScript -->
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-        const SUPABASE_URL = 'https://vfdxtujestpslpsvdkwh.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmZHh0dWplc3Rwc2xwc3Zka3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MTM1MTksImV4cCI6MjA3MDM4OTUxOX0.yJxlRUB1w7KS1bADPNnIaMNj3NRyjBWoJQFu2QJtknw';
-        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Konfigurasi Supabase (gunakan kredensial Anda)
+        const supabaseUrl = 'https://vfdxtujestpslpsvdkwh.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmZHh0dWplc3Rwc2xwc3Zka3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MTM1MTksImV4cCI6MjA3MDM4OTUxOX0.yJxlRUB1w7KS1bADPNnIaMNj3NRyjBWoJQFu2QJtknw';
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-        // DOM Elements
-        const authSection = document.getElementById('auth-section');
-        const mainContent = document.getElementById('main-content');
+        // --- DOM Elements ---
+        const loginSection = document.getElementById('login-section');
+        const dashboardSection = document.getElementById('dashboard-section');
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
-        const showRegisterBtn = document.getElementById('show-register');
-        const showLoginBtn = document.getElementById('show-login');
-        const logoutButton = document.getElementById('logout-button');
-        const userEmailSpan = document.getElementById('user-email');
+        const toggleAuthModeBtn = document.getElementById('toggle-auth-mode');
+        const authNotification = document.getElementById('auth-notification');
         const programForm = document.getElementById('program-form');
-        const programsTableBody = document.getElementById('programs-table-body');
-        const programsLoader = document.getElementById('programs-loader');
-        const toast = document.getElementById('toast');
-        const cancelEditBtn = document.getElementById('cancel-edit');
+        const programsList = document.getElementById('programs-list');
+        const programIdInput = document.getElementById('program-id');
+        const cancelButton = document.getElementById('cancel-edit');
+        const formButtonText = document.getElementById('form-button-text');
+        const logoutButton = document.getElementById('logout-button');
 
-        // Toast function
-        function showToast(message, isError = false) {
-            toast.textContent = message;
-            toast.className = `toast show ${isError ? 'bg-red-500' : 'bg-green-500'}`;
-            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
-        }
-
-        // --- Auth Logic ---
-        showRegisterBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginForm.classList.add('hidden');
-            registerForm.classList.remove('hidden');
-        });
-
-        showLoginBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerForm.classList.add('hidden');
-            loginForm.classList.remove('hidden');
-        });
+        let isEditMode = false;
         
+        // --- Functions ---
+
+        const showNotification = (message, isError = false) => {
+            authNotification.textContent = message;
+            authNotification.classList.remove('hidden');
+            authNotification.classList.toggle('bg-red-100', isError);
+            authNotification.classList.toggle('text-red-700', isError);
+            authNotification.classList.toggle('bg-green-100', !isError);
+            authNotification.classList.toggle('text-green-700', !isError);
+        };
+
+        const fetchPrograms = async () => {
+            const { data, error } = await supabase.from('events').select('*').order('created_at', { ascending: false });
+            if (error) {
+                console.error('Error fetching programs:', error);
+                return;
+            }
+            
+            programsList.innerHTML = '';
+            data.forEach(program => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b';
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-900">${program.title}</td>
+                    <td class="px-6 py-4">${new Date(program.start_date).toLocaleString('id-ID')}</td>
+                    <td class="px-6 py-4">${program.location}</td>
+                    <td class="px-6 py-4 flex space-x-2">
+                        <button data-id="${program.id}" class="edit-btn text-blue-600 hover:text-blue-800"><i class="fas fa-edit"></i></button>
+                        <button data-id="${program.id}" class="delete-btn text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                programsList.appendChild(row);
+            });
+        };
+
+        const resetForm = () => {
+            programForm.reset();
+            programIdInput.value = '';
+            isEditMode = false;
+            cancelButton.classList.add('hidden');
+            formButtonText.textContent = 'Simpan Program';
+        };
+
+        const editProgram = async (id) => {
+            const { data: event, error } = await supabase.from('events').select('*').eq('id', id).single();
+            if (error) {
+                console.error("Error fetching program for edit:", error);
+                return;
+            }
+            
+            // Mengisi form dengan data yang ada
+            programIdInput.value = event.id;
+            document.getElementById('title').value = event.title || '';
+            document.getElementById('description').value = event.description || '';
+            
+            // --- INI BAGIAN PERBAIKAN ---
+            // Format tanggal agar sesuai dengan input datetime-local (YYYY-MM-DDTHH:mm)
+            if (event.start_date) {
+                document.getElementById('start-date').value = event.start_date.slice(0, 16);
+            }
+            if (event.end_date) {
+                document.getElementById('end-date').value = event.end_date.slice(0, 16);
+            }
+            
+            document.getElementById('location').value = event.location || '';
+            document.getElementById('image-url').value = event.image_url || '';
+            document.getElementById('organizer').value = event.organizer || '';
+            document.getElementById('activity-type').value = event.activity_type || '';
+            document.getElementById('category').value = event.category || '';
+            document.getElementById('quota').value = event.quota || '';
+            document.getElementById('fee').value = event.fee || '';
+            document.getElementById('tasks').value = event.tasks || '';
+            document.getElementById('criteria').value = event.criteria || '';
+
+            isEditMode = true;
+            formButtonText.textContent = 'Update Program';
+            cancelButton.classList.remove('hidden');
+            window.scrollTo(0, 0); // Scroll ke atas
+        };
+
+        const deleteProgram = async (id) => {
+            if (!confirm('Apakah Anda yakin ingin menghapus program ini?')) return;
+            
+            const { error } = await supabase.from('events').delete().eq('id', id);
+            if (error) {
+                console.error("Error deleting program:", error);
+                alert("Gagal menghapus program.");
+            } else {
+                fetchPrograms();
+            }
+        };
+
+        const handleFormSubmit = async (e) => {
+            e.preventDefault();
+            const programData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                start_date: document.getElementById('start-date').value,
+                end_date: document.getElementById('end-date').value || null,
+                location: document.getElementById('location').value,
+                image_url: document.getElementById('image-url').value,
+                organizer: document.getElementById('organizer').value,
+                activity_type: document.getElementById('activity-type').value,
+                category: document.getElementById('category').value,
+                quota: parseInt(document.getElementById('quota').value) || null,
+                fee: parseInt(document.getElementById('fee').value) || null,
+                tasks: document.getElementById('tasks').value,
+                criteria: document.getElementById('criteria').value,
+            };
+
+            let error;
+            if (isEditMode) {
+                const { error: updateError } = await supabase.from('events').update(programData).eq('id', programIdInput.value);
+                error = updateError;
+            } else {
+                const { error: insertError } = await supabase.from('events').insert([programData]);
+                error = insertError;
+            }
+
+            if (error) {
+                console.error("Error saving program:", error);
+                alert(`Gagal menyimpan program: ${error.message}`);
+            } else {
+                resetForm();
+                fetchPrograms();
+            }
+        };
+
+        const checkUser = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                loginSection.classList.add('hidden');
+                dashboardSection.classList.remove('hidden');
+                fetchPrograms();
+            } else {
+                loginSection.classList.remove('hidden');
+                dashboardSection.classList.add('hidden');
+            }
+        };
+
+        // --- Event Listeners ---
+        
+        // Otentikasi
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const { error } = await db.auth.signInWithPassword({ email, password });
-            if (error) showToast(`Login failed: ${error.message}`, true);
-            else showToast('Login successful!');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                showNotification(error.message, true);
+            } else {
+                checkUser();
+            }
         });
-        
+
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
-            const { error } = await db.auth.signUp({ email, password });
-            if (error) showToast(`Registration failed: ${error.message}`, true);
-            else showToast('Registration successful! Please check your email to verify.');
+            const { error } = await supabase.auth.signUp({ email, password });
+            if (error) {
+                showNotification(error.message, true);
+            } else {
+                showNotification('Registrasi berhasil! Silakan cek email Anda untuk verifikasi.', false);
+            }
+        });
+
+        toggleAuthModeBtn.addEventListener('click', () => {
+            loginForm.classList.toggle('hidden');
+            registerForm.classList.toggle('hidden');
+            if (registerForm.classList.contains('hidden')) {
+                toggleAuthModeBtn.textContent = 'Belum punya akun? Register';
+            } else {
+                toggleAuthModeBtn.textContent = 'Sudah punya akun? Login';
+            }
         });
 
         logoutButton.addEventListener('click', async () => {
-            await db.auth.signOut();
+            await supabase.auth.signOut();
+            checkUser();
         });
 
-        // Listen for auth state changes
-        db.auth.onAuthStateChange((event, session) => {
-            if (session) {
-                authSection.classList.add('hidden');
-                mainContent.classList.remove('hidden');
-                userEmailSpan.textContent = session.user.email;
-                fetchPrograms();
-            } else {
-                authSection.classList.remove('hidden');
-                mainContent.classList.add('hidden');
-                userEmailSpan.textContent = '';
+        // Manajemen Program
+        programForm.addEventListener('submit', handleFormSubmit);
+        cancelButton.addEventListener('click', resetForm);
+        programsList.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.edit-btn');
+            const deleteBtn = e.target.closest('.delete-btn');
+            if (editBtn) {
+                editProgram(editBtn.dataset.id);
+            }
+            if (deleteBtn) {
+                deleteProgram(deleteBtn.dataset.id);
             }
         });
 
-        // --- CRUD Logic ---
-        async function fetchPrograms() {
-            programsLoader.style.display = 'block';
-            const { data, error } = await db.from('events').select('*').order('created_at', { ascending: false });
-            if (error) {
-                showToast(`Error fetching programs: ${error.message}`, true);
-                programsLoader.textContent = 'Gagal memuat data.';
-                return;
-            }
-            renderPrograms(data);
-            programsLoader.style.display = 'none';
-        }
-
-        function renderPrograms(programs) {
-            programsTableBody.innerHTML = programs.map(p => `
-                <tr class="bg-white border-b">
-                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${p.title}</td>
-                    <td class="px-6 py-4">${p.location || '-'}</td>
-                    <td class="px-6 py-4">${p.start_date || '-'}</td>
-                    <td class="px-6 py-4">${p.quota || '-'}</td>
-                    <td class="px-6 py-4 text-right">
-                        <button onclick="editProgram('${p.id}')" class="font-medium text-blue-600 hover:underline mr-4">Edit</button>
-                        <button onclick="deleteProgram('${p.id}')" class="font-medium text-red-600 hover:underline">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        programForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            saveProgram();
-        });
-
-        async function saveProgram() {
-            const id = document.getElementById('program-id').value;
-            const programData = {
-                title: document.getElementById('title').value,
-                description: document.getElementById('description').value,
-                start_date: document.getElementById('start_date').value || null,
-                start_time: document.getElementById('start_time').value || null,
-                location: document.getElementById('location').value,
-                poster_url: document.getElementById('poster_url').value,
-                created_by: document.getElementById('created_by').value,
-                category: document.getElementById('category').value,
-                activity_type: document.getElementById('activity_type').value,
-                quota: document.getElementById('quota').value ? parseInt(document.getElementById('quota').value) : null,
-                fee: document.getElementById('fee').value ? parseFloat(document.getElementById('fee').value) : null,
-                tasks: document.getElementById('tasks').value,
-                criteria: document.getElementById('criteria').value,
-                doc_url: document.getElementById('doc_url').value,
-            };
-
-            if (id) programData.id = id;
-
-            const { error } = await db.from('events').upsert(programData);
-            if (error) {
-                showToast(`Error saving program: ${error.message}`, true);
-            } else {
-                showToast('Program saved successfully!');
-                programForm.reset();
-                document.getElementById('program-id').value = '';
-                cancelEditBtn.classList.add('hidden');
-                fetchPrograms();
-            }
-        }
-        
-        window.editProgram = async function(id) {
-            const { data, error } = await db.from('events').select('*').eq('id', id).single();
-            if (error) {
-                showToast(`Error fetching program details: ${error.message}`, true);
-                return;
-            }
-            document.getElementById('program-id').value = data.id;
-            document.getElementById('title').value = data.title;
-            document.getElementById('description').value = data.description;
-            document.getElementById('start_date').value = data.start_date;
-            document.getElementById('start_time').value = data.start_time;
-            document.getElementById('location').value = data.location;
-            document.getElementById('poster_url').value = data.poster_url;
-            document.getElementById('created_by').value = data.created_by;
-            document.getElementById('category').value = data.category;
-            document.getElementById('activity_type').value = data.activity_type;
-            document.getElementById('quota').value = data.quota;
-            document.getElementById('fee').value = data.fee;
-            document.getElementById('tasks').value = data.tasks;
-            document.getElementById('criteria').value = data.criteria;
-            document.getElementById('doc_url').value = data.doc_url;
-            
-            cancelEditBtn.classList.remove('hidden');
-            window.scrollTo(0,0);
-        }
-        
-        cancelEditBtn.addEventListener('click', () => {
-             programForm.reset();
-             document.getElementById('program-id').value = '';
-             cancelEditBtn.classList.add('hidden');
-        });
-
-        window.deleteProgram = async function(id) {
-            if (!confirm('Are you sure you want to delete this program?')) return;
-            
-            const { error } = await db.from('events').delete().eq('id', id);
-            if (error) {
-                showToast(`Error deleting program: ${error.message}`, true);
-            } else {
-                showToast('Program deleted successfully!');
-                fetchPrograms();
-            }
-        }
+        // Initial Load
+        checkUser();
     </script>
 </body>
 </html>
