@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Sankara</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        /* Style untuk loader */
+        .loader {
+            border-top-color: #16a34a;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Container Utama -->
+    <div id="app" class="min-h-screen flex items-center justify-center p-4">
+
+        <!-- Login Form -->
+        <div id="login-form" class="w-full max-w-md">
+            <div class="bg-white p-8 rounded-2xl shadow-lg">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-gray-800">Admin Login</h1>
+                    <p class="text-gray-500">Selamat datang kembali</p>
+                </div>
+                <form id="login-form-element">
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="email" name="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500" placeholder="admin@sankara.org">
+                    </div>
+                    <div class="mb-6">
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="password" name="password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-colors duration-300">
+                        Login
+                    </button>
+                    <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard (Hidden by default) -->
+        <div id="dashboard" class="hidden w-full max-w-7xl">
+            <header class="flex justify-between items-center bg-white p-4 rounded-t-2xl shadow-md">
+                <h1 class="text-2xl font-bold text-gray-800">Sankara Dashboard</h1>
+                <div>
+                    <span id="user-email" class="text-gray-600 mr-4"></span>
+                    <button id="logout-button" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">Logout</button>
+                </div>
+            </header>
+
+            <div class="bg-white p-6 rounded-b-2xl shadow-lg">
+                <!-- Section: Program Management -->
+                <div id="program-management">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Manajemen Program</h2>
+
+                    <!-- Form to Add/Edit Program -->
+                    <form id="program-form" class="mb-8 p-6 bg-gray-50 rounded-lg border">
+                        <h3 id="form-title" class="text-lg font-medium mb-4">Tambah Program Baru</h3>
+                        <input type="hidden" id="program-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" id="title" placeholder="Judul Program" required class="px-4 py-2 border rounded-lg">
+                            <input type="text" id="location" placeholder="Lokasi" required class="px-4 py-2 border rounded-lg">
+                            <input type="date" id="start_date" required class="px-4 py-2 border rounded-lg">
+                            <input type="date" id="end_date" required class="px-4 py-2 border rounded-lg">
+                            <input type="text" id="registration_link" placeholder="Link Pendaftaran (Google Form)" class="px-4 py-2 border rounded-lg col-span-1 md:col-span-2">
+                            <textarea id="description" placeholder="Deskripsi Program" required class="px-4 py-2 border rounded-lg col-span-1 md:col-span-2"></textarea>
+                            <input type="text" id="poster_url" placeholder="URL Poster Gambar" required class="px-4 py-2 border rounded-lg col-span-1 md:col-span-2">
+                        </div>
+                        <div class="mt-4 flex gap-4">
+                            <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-5 rounded-lg hover:bg-blue-600">Simpan</button>
+                            <button type="button" id="cancel-edit-button" class="bg-gray-400 text-white font-bold py-2 px-5 rounded-lg hover:bg-gray-500 hidden">Batal</button>
+                        </div>
+                    </form>
+
+                    <!-- Table of Programs -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border">
+                            <thead class="bg-gray-200">
+                                <tr>
+                                    <th class="py-2 px-4 border-b">Judul</th>
+                                    <th class="py-2 px-4 border-b">Tanggal Mulai</th>
+                                    <th class="py-2 px-4 border-b">Lokasi</th>
+                                    <th class="py-2 px-4 border-b">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="programs-table-body">
+                                <!-- Loader -->
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <div class="flex justify-center items-center">
+                                            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+                                            <span class="ml-4">Memuat data program...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                 <!-- Note: Tambahkan section lain di sini (Berita, Tim, Mitra, dll) dengan pola yang sama -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Impor Supabase Client dari CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module">
+        // GANTI DENGAN KREDENSIAL SUPABASE ANDA
+        const SUPABASE_URL = 'https://vfdxtujestpslpsvdkwh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmZHh0dWplc3Rwc2xwc3Zka3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MTM1MTksImV4cCI6MjA3MDM4OTUxOX0.yJxlRUB1w7KS1bADPNnIaMNj3NRyjBWoJQFu2QJtknw';
+
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Elemen DOM
+        const loginForm = document.getElementById('login-form');
+        const dashboard = document.getElementById('dashboard');
+        const loginFormElement = document.getElementById('login-form-element');
+        const loginError = document.getElementById('login-error');
+        const userEmailSpan = document.getElementById('user-email');
+        const logoutButton = document.getElementById('logout-button');
+        const programForm = document.getElementById('program-form');
+        const programsTableBody = document.getElementById('programs-table-body');
+        const formTitle = document.getElementById('form-title');
+        const programIdInput = document.getElementById('program-id');
+        const cancelEditButton = document.getElementById('cancel-edit-button');
+
+        // Fungsi untuk mengambil dan menampilkan program
+        async function fetchPrograms() {
+            programsTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">Memuat data...</td></tr>`;
+            const { data, error } = await db.from('events').select('*').order('start_date', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching programs:', error);
+                programsTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Gagal memuat data.</td></tr>`;
+                return;
+            }
+
+            if (data.length === 0) {
+                programsTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">Belum ada program.</td></tr>`;
+                return;
+            }
+            
+            programsTableBody.innerHTML = data.map(program => `
+                <tr class="hover:bg-gray-50">
+                    <td class="py-2 px-4 border-b">${program.title}</td>
+                    <td class="py-2 px-4 border-b">${new Date(program.start_date).toLocaleDateString('id-ID')}</td>
+                    <td class="py-2 px-4 border-b">${program.location}</td>
+                    <td class="py-2 px-4 border-b">
+                        <button class="edit-button bg-yellow-500 text-white text-sm py-1 px-2 rounded hover:bg-yellow-600" data-id="${program.id}">Edit</button>
+                        <button class="delete-button bg-red-500 text-white text-sm py-1 px-2 rounded hover:bg-red-600" data-id="${program.id}">Hapus</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Fungsi untuk reset form
+        function resetForm() {
+            programForm.reset();
+            programIdInput.value = '';
+            formTitle.textContent = 'Tambah Program Baru';
+            cancelEditButton.classList.add('hidden');
+        }
+
+        // Event listener untuk form submit (tambah/update program)
+        programForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = programIdInput.value;
+            const programData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                start_date: document.getElementById('start_date').value,
+                end_date: document.getElementById('end_date').value,
+                location: document.getElementById('location').value,
+                registration_link: document.getElementById('registration_link').value,
+                poster_url: document.getElementById('poster_url').value,
+            };
+
+            let response;
+            if (id) { // Update
+                response = await db.from('events').update(programData).eq('id', id);
+            } else { // Insert
+                response = await db.from('events').insert([programData]);
+            }
+
+            if (response.error) {
+                alert('Gagal menyimpan program: ' + response.error.message);
+            } else {
+                alert('Program berhasil disimpan!');
+                resetForm();
+                fetchPrograms();
+            }
+        });
+
+        // Event listener untuk tombol edit dan hapus (event delegation)
+        programsTableBody.addEventListener('click', async (e) => {
+            // Edit
+            if (e.target.classList.contains('edit-button')) {
+                const id = e.target.dataset.id;
+                const { data, error } = await db.from('events').select('*').eq('id', id).single();
+                if (error) return alert('Gagal mengambil data program.');
+                
+                document.getElementById('program-id').value = data.id;
+                document.getElementById('title').value = data.title;
+                document.getElementById('description').value = data.description;
+                document.getElementById('start_date').value = data.start_date;
+                document.getElementById('end_date').value = data.end_date;
+                document.getElementById('location').value = data.location;
+                document.getElementById('registration_link').value = data.registration_link;
+                document.getElementById('poster_url').value = data.poster_url;
+                
+                formTitle.textContent = 'Edit Program';
+                cancelEditButton.classList.remove('hidden');
+                window.scrollTo(0, 0); // Scroll ke atas
+            }
+            // Delete
+            if (e.target.classList.contains('delete-button')) {
+                const id = e.target.dataset.id;
+                if (confirm('Apakah Anda yakin ingin menghapus program ini?')) {
+                    const { error } = await db.from('events').delete().eq('id', id);
+                    if (error) {
+                        alert('Gagal menghapus program: ' + error.message);
+                    } else {
+                        alert('Program berhasil dihapus.');
+                        fetchPrograms();
+                    }
+                }
+            }
+        });
+
+        cancelEditButton.addEventListener('click', resetForm);
+
+        // Fungsi untuk menangani login
+        loginFormElement.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                loginError.textContent = error.message;
+            } else {
+                loginError.textContent = '';
+                checkUser();
+            }
+        });
+
+        // Fungsi untuk menangani logout
+        logoutButton.addEventListener('click', async () => {
+            await db.auth.signOut();
+            checkUser();
+        });
+
+        // Fungsi untuk memeriksa status user
+        async function checkUser() {
+            const { data: { session } } = await db.auth.getSession();
+            if (session) {
+                loginForm.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                userEmailSpan.textContent = session.user.email;
+                fetchPrograms(); // Muat data program setelah login berhasil
+            } else {
+                loginForm.classList.remove('hidden');
+                dashboard.classList.add('hidden');
+            }
+        }
+        
+        // Periksa status user saat halaman pertama kali dimuat
+        checkUser();
+
+    </script>
+</body>
+</html>
+
