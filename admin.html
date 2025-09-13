@@ -149,10 +149,11 @@
                                 <option value="Tim Inti">Tim Inti</option>
                                 <option value="Tim Regional">Tim Regional</option>
                             </select>
+                            <input type="text" name="region" id="org-region" placeholder="Wilayah Regional (cth: Bandung)" class="w-full px-4 py-2 border rounded-md hidden">
                             <div><label for="org-photo-upload" class="text-sm font-medium">Foto</label><input type="file" id="org-photo-upload" accept="image/*" class="w-full text-sm"><input type="hidden" id="org-photo-url"></div>
                             <div class="flex space-x-2"><button type="submit" class="px-6 py-2 text-white bg-green-600 rounded-md">Simpan Anggota</button><button type="button" id="cancel-edit-org" class="hidden px-6 py-2 bg-gray-200 rounded-md">Batal</button></div>
                         </form>
-                        <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="px-6 py-3">Nama</th><th class="px-6 py-3">Jabatan</th><th class="px-6 py-3">Kategori</th><th class="px-6 py-3">Aksi</th></tr></thead><tbody id="org-list"></tbody></table></div>
+                        <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="px-6 py-3">Nama</th><th class="px-6 py-3">Jabatan</th><th class="px-6 py-3">Kategori</th><th class="px-6 py-3">Wilayah</th><th class="px-6 py-3">Aksi</th></tr></thead><tbody id="org-list"></tbody></table></div>
                     </div>
 
                 </main>
@@ -224,16 +225,13 @@
                     idInput.value = '';
                     if (urlInput) urlInput.value = '';
                     editId = null;
-                    form.querySelector('button[type=submit]').textContent = `Simpan ${tableName.charAt(0).toUpperCase() + tableName.slice(1)}`;
+                    form.querySelector('button[type=submit]').textContent = `Simpan ${tableName === 'organization_structure' ? 'Anggota' : (tableName.charAt(0).toUpperCase() + tableName.slice(1, -1))}`;
                     cancelBtn?.classList.add('hidden');
                 };
 
                 const fetchData = async () => {
                     const { data, error } = await supabase.from(tableName).select('*').order('created_at', { ascending: false });
-                    if (error) {
-                        console.error(`Error fetching ${tableName}:`, error);
-                        return;
-                    }
+                    if (error) { console.error(`Error fetching ${tableName}:`, error); return; }
                     itemDataCache = data;
                     renderList(data, list);
                 };
@@ -254,8 +252,7 @@
                     const dataToSubmit = {};
                     formData.forEach((value, key) => { if (value) dataToSubmit[key] = value; });
                     
-                    if (urlInputId === 'image-url') dataToSubmit.image_url = fileUrl;
-                    else if (urlInputId === 'news-image-url') dataToSubmit.image_url = fileUrl;
+                    if (urlInputId === 'news-image-url') dataToSubmit.image_url = fileUrl;
                     else if (urlInputId === 'partner-logo-url') dataToSubmit.logo_url = fileUrl;
                     else if (urlInputId === 'org-photo-url') dataToSubmit.photo_url = fileUrl;
 
@@ -263,12 +260,8 @@
                         ? await supabase.from(tableName).update(dataToSubmit).eq('id', editId)
                         : await supabase.from(tableName).insert([dataToSubmit]);
 
-                    if (error) {
-                        alert(`Gagal menyimpan: ${error.message}`);
-                    } else {
-                        resetForm();
-                        await fetchData();
-                    }
+                    if (error) { alert(`Gagal menyimpan: ${error.message}`); } 
+                    else { resetForm(); await fetchData(); }
                     submitButton.disabled = false;
                 };
 
@@ -419,7 +412,7 @@
                 renderList: (items, list) => { list.innerHTML = items.map(i => `<div class="relative group p-2 border rounded-md text-center bg-white"><img src="${i.logo_url}" class="h-20 mx-auto object-contain"><p class="mt-2 text-sm">${i.name}</p><button data-id="${i.id}" class="delete-btn absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 opacity-0 group-hover:opacity-100">&times;</button></div>`).join(''); },
                 fillForm: (data) => { document.getElementById('partner-id').value = data.id; document.getElementById('partner-name').value = data.name; document.getElementById('partner-logo-url').value = data.logo_url; }
             });
-             const orgManager = setupCrud({
+            const orgManager = setupCrud({
                 tableName: 'organization_structure', formId: 'org-form', listId: 'org-list', idInputId: 'org-id', 
                 fileInputId: 'org-photo-upload', urlInputId: 'org-photo-url', bucketName: 'org-photos', 
                 cancelBtnId: 'cancel-edit-org',
@@ -429,6 +422,7 @@
                             <td class="px-6 py-4">${i.name}</td>
                             <td class="px-6 py-4">${i.position}</td>
                             <td class="px-6 py-4">${i.category || 'N/A'}</td>
+                            <td class="px-6 py-4">${i.region || '-'}</td>
                             <td class="px-6 py-4 flex space-x-2">
                                 <button data-id="${i.id}" class="edit-btn text-blue-600"><i class="fas fa-edit"></i></button>
                                 <button data-id="${i.id}" class="delete-btn text-red-600"><i class="fas fa-trash"></i></button>
@@ -440,7 +434,18 @@
                     document.getElementById('org-name').value = data.name;
                     document.getElementById('org-position').value = data.position;
                     document.getElementById('org-category').value = data.category;
+                    document.getElementById('org-region').value = data.region || '';
                     document.getElementById('org-photo-url').value = data.photo_url;
+                    document.getElementById('org-category').dispatchEvent(new Event('change'));
+                }
+            });
+             document.getElementById('org-category').addEventListener('change', (e) => {
+                const regionInput = document.getElementById('org-region');
+                if (e.target.value === 'Tim Regional') {
+                    regionInput.classList.remove('hidden');
+                } else {
+                    regionInput.classList.add('hidden');
+                    regionInput.value = '';
                 }
             });
             
