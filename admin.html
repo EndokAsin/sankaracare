@@ -6,6 +6,8 @@
     <title>Admin Panel - Sankara</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Impor library SheetJS untuk ekspor Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Poppins', sans-serif; }
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
@@ -68,7 +70,7 @@
                 </div>
             </header>
             
-            <main class="container mx-auto p-6">
+            <main class="container mx-auto p-6 space-y-8">
                 <!-- Program Management Section -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h2 class="text-2xl font-bold mb-4">Manajemen Program</h2>
@@ -76,22 +78,12 @@
                     <!-- Form Tambah/Edit Program -->
                     <form id="program-form" class="mb-8 p-4 border rounded-lg bg-gray-50 space-y-4">
                         <input type="hidden" id="program-id">
-                        <input type="hidden" id="existing-image-url"> <!-- Untuk menyimpan URL gambar saat edit -->
-
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="text" id="title" placeholder="Judul Program" required class="w-full px-4 py-2 border rounded-md">
                              <input type="text" id="organizer" placeholder="Penyelenggara (cth: Peduly Semarang)" class="w-full px-4 py-2 border rounded-md">
                         </div>
                         <textarea id="description" placeholder="Deskripsi Program" class="w-full px-4 py-2 border rounded-md"></textarea>
-                        
-                        <!-- Input File untuk Poster -->
-                        <div>
-                            <label for="image-file" class="text-sm font-medium">Poster Program (Ganti/Upload Baru)</label>
-                            <input type="file" id="image-file" accept="image/*" class="w-full mt-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
-                            <p id="current-image-info" class="text-xs text-gray-500 mt-1 hidden">Kosongkan jika tidak ingin mengubah poster.</p>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                                 <label for="start-date" class="text-sm font-medium">Tanggal Mulai</label>
                                 <input type="datetime-local" id="start-date" required class="w-full px-4 py-2 border rounded-md">
@@ -101,6 +93,11 @@
                                 <input type="datetime-local" id="end-date" class="w-full px-4 py-2 border rounded-md">
                             </div>
                             <input type="text" id="location" placeholder="Lokasi (cth: Kota Semarang)" class="w-full px-4 py-2 border rounded-md self-end">
+                            <div class="self-end">
+                                <label for="image-upload" class="text-sm font-medium">Unggah Poster</label>
+                                <input type="file" id="image-upload" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                                <input type="hidden" id="image-url">
+                            </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <select id="activity-type" class="w-full px-4 py-2 border rounded-md">
@@ -131,9 +128,9 @@
                         <table class="w-full text-sm text-left text-gray-600">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3">Poster</th>
                                     <th class="px-6 py-3">Judul</th>
                                     <th class="px-6 py-3">Tanggal Mulai</th>
+                                    <th class="px-6 py-3">Lokasi</th>
                                     <th class="px-6 py-3">Aksi</th>
                                 </tr>
                             </thead>
@@ -143,6 +140,37 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Registrant Data Section -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-bold mb-4">Data Pendaftar Program</h2>
+                    <div class="flex flex-col md:flex-row md:items-center md:space-x-4 mb-4">
+                        <select id="program-select" class="w-full md:w-1/2 px-4 py-2 border rounded-md mb-2 md:mb-0">
+                            <option value="">Pilih Program untuk Melihat Pendaftar</option>
+                        </select>
+                        <button id="export-excel-btn" class="px-4 py-2 text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:bg-gray-400" disabled>
+                            <i class="fas fa-file-excel mr-2"></i>Ekspor ke Excel
+                        </button>
+                    </div>
+
+                    <!-- Tabel Pendaftar -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3">Nama Lengkap</th>
+                                    <th class="px-6 py-3">Email</th>
+                                    <th class="px-6 py-3">No. Telepon</th>
+                                    <th class="px-6 py-3">Bukti Bayar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="registrants-list">
+                                <tr><td colspan="4" class="text-center py-4 text-gray-500">Silakan pilih program terlebih dahulu.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </main>
         </div>
     </div>
@@ -159,24 +187,25 @@
         // --- DOM Elements ---
         const loginSection = document.getElementById('login-section');
         const dashboardSection = document.getElementById('dashboard-section');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const toggleAuthModeBtn = document.getElementById('toggle-auth-mode');
-        const authNotification = document.getElementById('auth-notification');
         const programForm = document.getElementById('program-form');
         const programsList = document.getElementById('programs-list');
         const programIdInput = document.getElementById('program-id');
-        const existingImageUrlInput = document.getElementById('existing-image-url');
-        const cancelButton = document.getElementById('cancel-edit');
-        const formButtonText = document.getElementById('form-button-text');
-        const logoutButton = document.getElementById('logout-button');
-        const imageFileInput = document.getElementById('image-file');
-        const currentImageInfo = document.getElementById('current-image-info');
+        const programSelect = document.getElementById('program-select');
+        const registrantsList = document.getElementById('registrants-list');
+        const exportExcelBtn = document.getElementById('export-excel-btn');
 
         let isEditMode = false;
+        let programsData = []; // Cache data program
+
+        // --- Perbaikan Format Tanggal ---
+        const toLocalISOString = (date) => {
+            if (!date) return '';
+            const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(new Date(date).getTime() - tzoffset)).toISOString().slice(0, 16);
+            return localISOTime;
+        };
         
         // --- Functions ---
-
         const fetchPrograms = async () => {
             const { data, error } = await supabase.from('events').select('*').order('created_at', { ascending: false });
             if (error) {
@@ -184,46 +213,54 @@
                 return;
             }
             
+            programsData = data; // Simpan data
             programsList.innerHTML = '';
+            programSelect.innerHTML = '<option value="">Pilih Program untuk Melihat Pendaftar</option>'; // Reset dropdown
+
             data.forEach(program => {
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b';
                 row.innerHTML = `
-                    <td class="px-6 py-4">
-                        <img src="${program.image_url || 'https://placehold.co/100x60/eee/ccc?text=No+Image'}" class="w-24 h-16 object-cover rounded-md">
-                    </td>
                     <td class="px-6 py-4 font-medium text-gray-900">${program.title}</td>
                     <td class="px-6 py-4">${new Date(program.start_date).toLocaleString('id-ID')}</td>
+                    <td class="px-6 py-4">${program.location}</td>
                     <td class="px-6 py-4 flex space-x-2">
                         <button data-id="${program.id}" class="edit-btn text-blue-600 hover:text-blue-800"><i class="fas fa-edit"></i></button>
                         <button data-id="${program.id}" class="delete-btn text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 programsList.appendChild(row);
+
+                // Isi dropdown
+                const option = document.createElement('option');
+                option.value = program.id;
+                option.textContent = program.title;
+                programSelect.appendChild(option);
             });
         };
 
         const resetForm = () => {
             programForm.reset();
             programIdInput.value = '';
-            existingImageUrlInput.value = '';
             isEditMode = false;
-            cancelButton.classList.add('hidden');
-            currentImageInfo.classList.add('hidden');
-            formButtonText.textContent = 'Simpan Program';
+            document.getElementById('cancel-edit').classList.add('hidden');
+            document.getElementById('form-button-text').textContent = 'Simpan Program';
         };
 
-        const editProgram = async (id) => {
-            const { data: event, error } = await supabase.from('events').select('*').eq('id', id).single();
-            if (error) return;
+        const editProgram = (id) => {
+            const event = programsData.find(p => p.id === id);
+            if (!event) return;
             
             programIdInput.value = event.id;
-            existingImageUrlInput.value = event.image_url || ''; // Simpan URL gambar lama
             document.getElementById('title').value = event.title || '';
             document.getElementById('description').value = event.description || '';
-            if (event.start_date) document.getElementById('start-date').value = event.start_date.slice(0, 16);
-            if (event.end_date) document.getElementById('end-date').value = event.end_date.slice(0, 16);
+            
+            // Gunakan fungsi toLocalISOString untuk format yang benar
+            document.getElementById('start-date').value = toLocalISOString(event.start_date);
+            document.getElementById('end-date').value = toLocalISOString(event.end_date);
+            
             document.getElementById('location').value = event.location || '';
+            document.getElementById('image-url').value = event.image_url || '';
             document.getElementById('organizer').value = event.organizer || '';
             document.getElementById('activity-type').value = event.activity_type || '';
             document.getElementById('category').value = event.category || '';
@@ -233,51 +270,43 @@
             document.getElementById('criteria').value = event.criteria || '';
 
             isEditMode = true;
-            formButtonText.textContent = 'Update Program';
-            cancelButton.classList.remove('hidden');
-            currentImageInfo.classList.remove('hidden');
+            document.getElementById('form-button-text').textContent = 'Update Program';
+            document.getElementById('cancel-edit').classList.remove('hidden');
             window.scrollTo(0, 0);
         };
 
         const deleteProgram = async (id) => {
-            if (!confirm('Yakin ingin menghapus program ini?')) return;
+            if (!confirm('Apakah Anda yakin ingin menghapus program ini?')) return;
+            
             const { error } = await supabase.from('events').delete().eq('id', id);
-            if (error) alert("Gagal menghapus program.");
-            else fetchPrograms();
+            if (error) {
+                alert("Gagal menghapus program.");
+            } else {
+                fetchPrograms();
+            }
         };
 
         const handleFormSubmit = async (e) => {
             e.preventDefault();
             const submitButton = e.target.querySelector('button[type="submit"]');
             submitButton.disabled = true;
-            
-            let imageUrl = existingImageUrlInput.value; // Gunakan URL lama secara default
 
-            // --- LOGIKA UPLOAD BARU ---
-            const file = imageFileInput.files[0];
-            if (file) {
-                // Buat nama file unik untuk menghindari konflik
-                const filePath = `public/${Date.now()}-${file.name}`;
-                
-                // Upload file ke bucket 'event-posters'
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('event-posters') // Pastikan nama bucket sesuai
-                    .upload(filePath, file);
+            const imageFile = document.getElementById('image-upload').files[0];
+            let imageUrl = document.getElementById('image-url').value;
 
+            // Jika ada file baru yang diunggah
+            if (imageFile) {
+                const fileExt = imageFile.name.split('.').pop();
+                const fileName = `public/${Date.now()}.${fileExt}`;
+                const { error: uploadError } = await supabase.storage.from('event-posters').upload(fileName, imageFile);
                 if (uploadError) {
                     alert('Gagal mengunggah gambar: ' + uploadError.message);
                     submitButton.disabled = false;
                     return;
                 }
-
-                // Ambil URL publik dari file yang baru diunggah
-                const { data: urlData } = supabase.storage
-                    .from('event-posters')
-                    .getPublicUrl(uploadData.path);
-                
-                imageUrl = urlData.publicUrl;
+                const { data } = supabase.storage.from('event-posters').getPublicUrl(fileName);
+                imageUrl = data.publicUrl;
             }
-            // --- AKHIR LOGIKA UPLOAD ---
 
             const programData = {
                 title: document.getElementById('title').value,
@@ -285,7 +314,7 @@
                 start_date: document.getElementById('start-date').value,
                 end_date: document.getElementById('end-date').value || null,
                 location: document.getElementById('location').value,
-                image_url: imageUrl, // Simpan URL dari bucket
+                image_url: imageUrl,
                 organizer: document.getElementById('organizer').value,
                 activity_type: document.getElementById('activity-type').value,
                 category: document.getElementById('category').value,
@@ -313,6 +342,87 @@
             submitButton.disabled = false;
         };
 
+        const fetchRegistrants = async (eventId) => {
+            if (!eventId) {
+                registrantsList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">Silakan pilih program terlebih dahulu.</td></tr>';
+                exportExcelBtn.disabled = true;
+                return;
+            }
+
+            registrantsList.innerHTML = '<tr><td colspan="4" class="text-center py-4">Memuat data pendaftar...</td></tr>';
+            
+            // Mengambil pendaftar dan data profil mereka sekaligus
+            const { data, error } = await supabase
+                .from('event_registrations')
+                .select(`
+                    phone_number,
+                    payment_proof_url,
+                    profiles (
+                        full_name,
+                        email
+                    )
+                `)
+                .eq('event_id', eventId);
+
+            if (error) {
+                console.error('Error fetching registrants:', error);
+                registrantsList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-500">Gagal memuat data.</td></tr>';
+                return;
+            }
+
+            if (data.length === 0) {
+                registrantsList.innerHTML = '<tr><td colspan="4" class="text-center py-4">Belum ada pendaftar untuk program ini.</td></tr>';
+                exportExcelBtn.disabled = true;
+                return;
+            }
+
+            registrantsList.innerHTML = '';
+            data.forEach(reg => {
+                const profile = reg.profiles;
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b';
+                row.innerHTML = `
+                    <td class="px-6 py-4">${profile?.full_name || 'N/A'}</td>
+                    <td class="px-6 py-4">${profile?.email || 'N/A'}</td>
+                    <td class="px-6 py-4">${reg.phone_number || 'N/A'}</td>
+                    <td class="px-6 py-4">
+                        <a href="${reg.payment_proof_url}" target="_blank" class="text-blue-600 hover:underline">Lihat Bukti</a>
+                    </td>
+                `;
+                registrantsList.appendChild(row);
+            });
+
+            exportExcelBtn.disabled = false;
+        };
+
+        const exportToExcel = async () => {
+            const eventId = programSelect.value;
+            const programTitle = programSelect.options[programSelect.selectedIndex].text;
+            if (!eventId) return;
+
+            const { data, error } = await supabase
+                .from('event_registrations')
+                .select('phone_number, payment_proof_url, profiles(full_name, email)')
+                .eq('event_id', eventId);
+
+            if (error || !data) {
+                alert('Gagal mengambil data untuk ekspor.');
+                return;
+            }
+
+            const flattenedData = data.map(row => ({
+                "Nama Lengkap": row.profiles?.full_name || '',
+                "Email": row.profiles?.email || '',
+                "No. Telepon": row.phone_number || '',
+                "Link Bukti Bayar": row.payment_proof_url || ''
+            }));
+            
+            const worksheet = XLSX.utils.json_to_sheet(flattenedData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Pendaftar");
+            XLSX.writeFile(workbook, `Pendaftar_${programTitle.replace(/ /g, "_")}.xlsx`);
+        };
+
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
@@ -326,39 +436,31 @@
         };
 
         // --- Event Listeners ---
-        loginForm.addEventListener('submit', async (e) => {
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) alert(error.message);
-            checkUser();
+            else checkUser();
         });
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            const { error } = await supabase.auth.signUp({ email, password });
-            if (error) alert(error.message);
-            else alert('Registrasi berhasil! Cek email untuk verifikasi.');
-        });
-        toggleAuthModeBtn.addEventListener('click', () => {
-            loginForm.classList.toggle('hidden');
-            registerForm.classList.toggle('hidden');
-            toggleAuthModeBtn.textContent = registerForm.classList.contains('hidden') ? 'Belum punya akun? Register' : 'Sudah punya akun? Login';
-        });
-        logoutButton.addEventListener('click', async () => {
+
+        document.getElementById('logout-button').addEventListener('click', async () => {
             await supabase.auth.signOut();
             checkUser();
         });
+
         programForm.addEventListener('submit', handleFormSubmit);
-        cancelButton.addEventListener('click', resetForm);
+        document.getElementById('cancel-edit').addEventListener('click', resetForm);
         programsList.addEventListener('click', (e) => {
             const editBtn = e.target.closest('.edit-btn');
-            const deleteBtn = e.target.closest('.delete-btn');
             if (editBtn) editProgram(editBtn.dataset.id);
+            const deleteBtn = e.target.closest('.delete-btn');
             if (deleteBtn) deleteProgram(deleteBtn.dataset.id);
         });
+        
+        programSelect.addEventListener('change', (e) => fetchRegistrants(e.target.value));
+        exportExcelBtn.addEventListener('click', exportToExcel);
 
         // Initial Load
         checkUser();
