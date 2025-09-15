@@ -196,24 +196,24 @@
         const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
         const sdgIcons = {
-            SDG1: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-01.png" alt="SDG 1: No Poverty" class="sdg-icon" />',
-            SDG2: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-02.png" alt="SDG 2: Zero Hunger" class="sdg-icon" />',
-            SDG3: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-03.png" alt="SDG 3: Good Health and Well-being" class="sdg-icon" />',
-            SDG4: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-04.png" alt="SDG 4: Quality Education" class="sdg-icon" />',
-            SDG5: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-05.png" alt="SDG 5: Gender Equality" class="sdg-icon" />',
-            SDG6: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-06.png" alt="SDG 6: Clean Water and Sanitation" class="sdg-icon" />',
-            SDG7: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-07.png" alt="SDG 7: Affordable and Clean Energy" class="sdg-icon" />',
-            SDG8: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-08.png" alt="SDG 8: Decent Work and Economic Growth" class="sdg-icon" />',
-            SDG9: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-09.png" alt="SDG 9: Industry, Innovation and Infrastructure" class="sdg-icon" />',
-            SDG10: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-10.png" alt="SDG 10: Reduced Inequalities" class="sdg-icon" />',
-            SDG11: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-11.png" alt="SDG 11: Sustainable Cities and Communities" class="sdg-icon" />',
-            SDG12: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-12.png" alt="SDG 12: Responsible Consumption and Production" class="sdg-icon" />',
-            SDG13: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-13.png" alt="SDG 13: Climate Action" class="sdg-icon" />',
-            SDG14: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-14.png" alt="SDG 14: Life Below Water" class="sdg-icon" />',
-            SDG15: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-15.png" alt="SDG 15: Life on Land" class="sdg-icon" />',
-            SDG16: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-16.png" alt="SDG 16: Peace, Justice and Strong Institutions" class="sdg-icon" />',
-            SDG17: '<img src="https://sdgs.un.org/sites/default/files/goals/E_SDG_Goals-web-17.png" alt="SDG 17: Partnerships for the Goals" class="sdg-icon" />'
-        };
+    SDG1: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-01.png" alt="SDG 1: No Poverty" class="sdg-icon w-8 h-8">',
+    SDG2: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-02.png" alt="SDG 2: Zero Hunger" class="sdg-icon w-8 h-8">',
+    SDG3: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-03.png" alt="SDG 3: Good Health and Well-being" class="sdg-icon w-8 h-8">',
+    SDG4: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-04.png" alt="SDG 4: Quality Education" class="sdg-icon w-8 h-8">',
+    SDG5: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-05.png" alt="SDG 5: Gender Equality" class="sdg-icon w-8 h-8">',
+    SDG6: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-06.png" alt="SDG 6: Clean Water and Sanitation" class="sdg-icon w-8 h-8">',
+    SDG7: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-07.png" alt="SDG 7: Affordable and Clean Energy" class="sdg-icon w-8 h-8">',
+    SDG8: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-08.png" alt="SDG 8: Decent Work and Economic Growth" class="sdg-icon w-8 h-8">',
+    SDG9: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-09.png" alt="SDG 9: Industry, Innovation and Infrastructure" class="sdg-icon w-8 h-8">',
+    SDG10: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-10.png" alt="SDG 10: Reduced Inequalities" class="sdg-icon w-8 h-8">',
+    SDG11: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-11.png" alt="SDG 11: Sustainable Cities and Communities" class="sdg-icon w-8 h-8">',
+    SDG12: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-12.png" alt="SDG 12: Responsible Consumption and Production" class="sdg-icon w-8 h-8">',
+    SDG13: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-13.png" alt="SDG 13: Climate Action" class="sdg-icon w-8 h-8">',
+    SDG14: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-14.png" alt="SDG 14: Life Below Water" class="sdg-icon w-8 h-8">',
+    SDG15: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-15.png" alt="SDG 15: Life on Land" class="sdg-icon w-8 h-8">',
+    SDG16: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-16.png" alt="SDG 16: Peace, Justice and Strong Institutions" class="sdg-icon w-8 h-8">',
+    SDG17: '<img src="https://vfdxtujestpslpsvdkwh.supabase.co/storage/v1/object/public/sdgs/E-WEB-Goal-17.png" alt="SDG 17: Partnerships for the Goals" class="sdg-icon w-8 h-8">',
+};
 
         // --- Helper Functions ---
         const formatDate = (isoString) => isoString ? new Date(isoString).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A';
