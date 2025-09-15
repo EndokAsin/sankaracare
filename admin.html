@@ -11,6 +11,10 @@
         body { font-family: 'Poppins', sans-serif; }
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         .sidebar-link.active { background-color: #dcfce7; color: #16a34a; font-weight: 600; }
+        .sdg-icon { width: 32px; height: 32px; }
+        /* Style for multi-select dropdown */
+        select[multiple] { height: auto; min-height: 100px; }
+        select[multiple] option:checked { background-color: #dcfce7; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -95,12 +99,35 @@
                                     <textarea name="tasks" id="tasks" placeholder="Tugas (satu per baris)" class="w-full px-4 py-2 border rounded-md h-24"></textarea>
                                     <textarea name="criteria" id="criteria" placeholder="Kriteria (satu per baris)" class="w-full px-4 py-2 border rounded-md h-24"></textarea>
                                 </div>
+                                <!-- Tambahan untuk SDGs -->
+                                <div>
+                                    <label for="sdg-select" class="block text-sm font-medium text-gray-700">Tujuan Pembangunan Berkelanjutan (SDGs)</label>
+                                    <select name="sdgs" id="sdg-select" multiple class="w-full mt-1 px-4 py-2 border rounded-md">
+                                        <option value="SDG1">1: Tanpa Kemiskinan</option>
+                                        <option value="SDG2">2: Tanpa Kelaparan</option>
+                                        <option value="SDG3">3: Kehidupan Sehat & Sejahtera</option>
+                                        <option value="SDG4">4: Pendidikan Berkualitas</option>
+                                        <option value="SDG5">5: Kesetaraan Gender</option>
+                                        <option value="SDG6">6: Air Bersih & Sanitasi Layak</option>
+                                        <option value="SDG7">7: Energi Bersih & Terjangkau</option>
+                                        <option value="SDG8">8: Pekerjaan Layak & Pertumbuhan Ekonomi</option>
+                                        <option value="SDG9">9: Industri, Inovasi & Infrastruktur</option>
+                                        <option value="SDG10">10: Berkurangnya Kesenjangan</option>
+                                        <option value="SDG11">11: Kota & Permukiman Berkelanjutan</option>
+                                        <option value="SDG12">12: Konsumsi & Produksi yang Bertanggung Jawab</option>
+                                        <option value="SDG13">13: Penanganan Perubahan Iklim</option>
+                                        <option value="SDG14">14: Ekosistem Lautan</option>
+                                        <option value="SDG15">15: Ekosistem Daratan</option>
+                                        <option value="SDG16">16: Perdamaian, Keadilan & Kelembagaan yang Tangguh</option>
+                                        <option value="SDG17">17: Kemitraan untuk Mencapai Tujuan</option>
+                                    </select>
+                                </div>
                                 <div class="flex space-x-2">
                                     <button type="submit" class="px-6 py-2 text-white bg-green-600 rounded-md"><i class="fas fa-save mr-2"></i><span id="form-button-text">Simpan Program</span></button>
                                     <button type="button" id="cancel-edit-program" class="hidden px-6 py-2 bg-gray-200 rounded-md"><i class="fas fa-times mr-2"></i>Batal</button>
                                 </div>
                             </form>
-                            <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="px-6 py-3">Judul</th><th class="px-6 py-3">Tanggal</th><th class="px-6 py-3">Lokasi</th><th class="px-6 py-3">Aksi</th></tr></thead><tbody id="programs-list"></tbody></table></div>
+                            <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="px-6 py-3">Judul</th><th class="px-6 py-3">Tanggal</th><th class="px-6 py-3">Lokasi</th><th class="px-6 py-3">SDGs</th><th class="px-6 py-3">Aksi</th></tr></thead><tbody id="programs-list"></tbody></table></div>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md">
                             <h2 class="text-2xl font-bold mb-4">Data Pendaftar Program</h2>
@@ -145,10 +172,10 @@
                             <input type="text" name="name" id="org-name" placeholder="Nama Lengkap" required class="w-full px-4 py-2 border rounded-md">
                             <input type="text" name="position" id="org-position" placeholder="Jabatan" required class="w-full px-4 py-2 border rounded-md">
                              <select name="category" id="org-category" required class="w-full px-4 py-2 border rounded-md">
-                                <option value="" disabled selected>Pilih Kategori</option>
-                                <option value="Tim Inti">Tim Inti</option>
-                                <option value="Tim Regional">Tim Regional</option>
-                            </select>
+                                 <option value="" disabled selected>Pilih Kategori</option>
+                                 <option value="Tim Inti">Tim Inti</option>
+                                 <option value="Tim Regional">Tim Regional</option>
+                             </select>
                             <input type="text" name="region" id="org-region" placeholder="Wilayah Regional (cth: Bandung)" class="w-full px-4 py-2 border rounded-md hidden">
                             <div><label for="org-photo-upload" class="text-sm font-medium">Foto</label><input type="file" id="org-photo-upload" accept="image/*" class="w-full text-sm"><input type="hidden" id="org-photo-url"></div>
                             <div class="flex space-x-2"><button type="submit" class="px-6 py-2 text-white bg-green-600 rounded-md">Simpan Anggota</button><button type="button" id="cancel-edit-org" class="hidden px-6 py-2 bg-gray-200 rounded-md">Batal</button></div>
@@ -167,6 +194,26 @@
         const supabaseUrl = 'https://vfdxtujestpslpsvdkwh.supabase.co';
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmZHh0dWplc3Rwc2xwc3Zka3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4MTM1MTksImV4cCI6MjA3MDM4OTUxOX0.yJxlRUB1w7KS1bADPNnIaMNj3NRyjBWoJQFu2QJtknw';
         const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        const sdgIcons = {
+            SDG1: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#e5243b" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG2: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#dda63a" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG3: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#4c9f38" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG4: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#c5192d" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG5: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#ff3a21" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG6: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#26bde2" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG7: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#fcc30b" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG8: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#a21942" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG9: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#fd6925" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG10: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#dd1367" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG11: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#fd9d24" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG12: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#bf8b2e" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG13: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#3f7e44" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG14: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#0a97d9" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG15: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#597327" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG16: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#00689d" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>',
+            SDG17: '<svg class="sdg-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#19486a" d="M12.5 0h75a12.5 12.5 0 0112.5 12.5v75a12.5 12.5 0 01-12.5 12.5h-75A12.5 12.5 0 010 87.5v-75A12.5 12.5 0 0112.5 0z"/><path fill="#fff" d="M37.5 37.5h25v25h-25z"/></svg>'
+        };
 
         // --- Helper Functions ---
         const formatDate = (isoString) => isoString ? new Date(isoString).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A';
@@ -300,6 +347,7 @@
             const programSelect = document.getElementById('program-select');
             const registrantsList = document.getElementById('registrants-list');
             const exportExcelBtn = document.getElementById('export-excel-btn');
+            const sdgSelect = document.getElementById('sdg-select');
             let programsData = [];
             
             const fetchPrograms = async () => {
@@ -309,7 +357,8 @@
                 programsList.innerHTML = '';
                 programSelect.innerHTML = '<option value="">Pilih Program</option>';
                 data.forEach(p => {
-                    programsList.innerHTML += `<tr class="bg-white border-b"><td class="px-6 py-4">${p.title}</td><td class="px-6 py-4">${formatDate(p.start_date)}</td><td class="px-6 py-4">${p.location}</td><td class="px-6 py-4 flex space-x-2"><button data-id="${p.id}" class="edit-btn text-blue-600"><i class="fas fa-edit"></i></button><button data-id="${p.id}" class="delete-btn text-red-600"><i class="fas fa-trash"></i></button></td></tr>`;
+                    const sdgIconsHtml = (p.sdgs || []).map(sdg => sdgIcons[sdg] || '').join('');
+                    programsList.innerHTML += `<tr class="bg-white border-b"><td class="px-6 py-4">${p.title}</td><td class="px-6 py-4">${formatDate(p.start_date)}</td><td class="px-6 py-4">${p.location}</td><td class="px-6 py-4 flex space-x-2">${sdgIconsHtml}</td><td class="px-6 py-4 flex space-x-2"><button data-id="${p.id}" class="edit-btn text-blue-600"><i class="fas fa-edit"></i></button><button data-id="${p.id}" class="delete-btn text-red-600"><i class="fas fa-trash"></i></button></td></tr>`;
                     programSelect.innerHTML += `<option value="${p.id}">${p.title}</option>`;
                 });
             };
@@ -360,12 +409,14 @@
                     imageUrl = url;
                 }
                 const programId = document.getElementById('program-id').value;
+                const selectedSdgs = Array.from(sdgSelect.options).filter(opt => opt.selected).map(opt => opt.value);
                 const programData = {
                     title: document.getElementById('program-title').value, organizer: document.getElementById('program-organizer').value, description: document.getElementById('program-description').value,
                     start_date: convertToDbFormat(document.getElementById('start-date').value), end_date: convertToDbFormat(document.getElementById('end-date').value), location: document.getElementById('program-location').value,
                     image_url: imageUrl, activity_type: document.getElementById('activity-type').value, category: document.getElementById('program-category').value,
                     quota: parseInt(document.getElementById('quota').value) || null, fee: parseInt(document.getElementById('fee').value) || null,
-                    tasks: document.getElementById('tasks').value, criteria: document.getElementById('criteria').value
+                    tasks: document.getElementById('tasks').value, criteria: document.getElementById('criteria').value,
+                    sdgs: selectedSdgs // Tambahkan SDGs ke data
                 };
                 const { error } = programId ? await supabase.from('events').update(programData).eq('id', programId) : await supabase.from('events').insert([programData]);
                 if (error) alert(`Gagal: ${error.message}`); else {
@@ -385,6 +436,12 @@
                     document.getElementById('activity-type').value = event.activity_type; document.getElementById('program-category').value = event.category;
                     document.getElementById('quota').value = event.quota; document.getElementById('fee').value = event.fee;
                     document.getElementById('tasks').value = event.tasks; document.getElementById('criteria').value = event.criteria;
+                    
+                    // Isi dropdown SDGs
+                    Array.from(sdgSelect.options).forEach(opt => {
+                        opt.selected = (event.sdgs || []).includes(opt.value);
+                    });
+
                     document.getElementById('form-button-text').textContent = 'Update Program'; document.getElementById('cancel-edit-program').classList.remove('hidden');
                 }
                 const deleteBtn = e.target.closest('.delete-btn');
@@ -477,4 +534,3 @@
     </script>
 </body>
 </html>
-
