@@ -529,7 +529,7 @@
                 if (error) alert(error.message); else await checkUser();
             });
             logoutButton.addEventListener('click', async () => { await supabase.auth.signOut(); await checkUser(); });
-            
+         
             checkUser();
         });
     </script>
